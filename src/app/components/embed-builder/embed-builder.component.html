@@ -50,6 +50,7 @@
         >
           Enter a valid URL starting with http:// or https://.
         </small>
+        <small class="error-text" *ngIf="!hasToken">Bearer token required to fetch.</small>
         <div class="field__actions">
           <button
             type="button"
@@ -59,7 +60,6 @@
           >
             {{ isScraping ? 'Fetching asset data...' : 'Fetch from Asset Store' }}
           </button>
-          <small class="error-text" *ngIf="!hasToken">Bearer token required to fetch.</small>
         </div>
       </label>
     </div>
