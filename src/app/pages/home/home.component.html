@@ -6,6 +6,8 @@
       [form]="form"
       [colorHex]="colorHex"
       (colorChange)="handleColorChange($event)"
+      [isScraping]="isScraping"
+      (assetStoreScrape)="handleAssetStoreScrape()"
     ></app-embed-builder>
 
     <div class="preview">

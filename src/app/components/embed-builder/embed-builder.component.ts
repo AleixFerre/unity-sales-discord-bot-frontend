@@ -11,7 +11,9 @@ import { FormArray, FormControl, FormGroup, ReactiveFormsModule } from '@angular
 export class EmbedBuilderComponent {
   @Input({ required: true }) form!: FormGroup;
   @Input() colorHex = '#000000';
+  @Input() isScraping = false;
   @Output() colorChange = new EventEmitter<string>();
+  @Output() assetStoreScrape = new EventEmitter<void>();
 
   get embedGroup(): FormGroup {
     return this.form.get('embed') as FormGroup;
@@ -19,6 +21,11 @@ export class EmbedBuilderComponent {
 
   get fieldsArray(): FormArray {
     return this.embedGroup.get('fields') as FormArray;
+  }
+
+  get hasToken(): boolean {
+    const token = this.form?.get('token')?.value;
+    return typeof token === 'string' && token.trim().length > 0;
   }
 
   addField(): void {

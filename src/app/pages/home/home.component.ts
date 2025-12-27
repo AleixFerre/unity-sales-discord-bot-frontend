@@ -14,9 +14,12 @@ import { finalize } from 'rxjs';
 import { EmbedBuilderComponent } from '../../components/embed-builder/embed-builder.component';
 import { EmbedPreviewComponent } from '../../components/embed-preview/embed-preview.component';
 import { EmbedConfig, EmbedRequest } from '../../models/embed.model';
-import { EmbedService } from '../../services/embed.service';
+import { AssetStoreData, EmbedService } from '../../services/embed.service';
 
 type StatusMessage = { type: 'success' | 'error'; text: string } | null;
+type AssetStoreDataWithPromo = AssetStoreData & {
+  promoCode?: string;
+};
 
 @Component({
   selector: 'app-home',
@@ -49,9 +52,9 @@ export class HomeComponent {
         validators: [Validators.required, Validators.pattern(/^https?:\/\/.+/i)],
       }),
       fields: this.formBuilder.array([
-        this.createField('Descuento', '100%', true),
-        this.createField('Fin', '12/01/2026', true),
-        this.createField('Código', 'GIFTFROMDTT', true),
+        this.createField('Descompte', '100%', true),
+        this.createField('Fi', '12/01/2026', true),
+        this.createField('Codi', 'CODE', true),
       ]),
       footer: this.formBuilder.group({
         text: new FormControl('Unity Sales Bot', {
@@ -78,6 +81,7 @@ export class HomeComponent {
   colorHex = this.toHexColor(this.previewEmbed.color);
   status: StatusMessage = null;
   isSubmitting = false;
+  isScraping = false;
 
   constructor() {
     this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((value) => {
@@ -132,12 +136,99 @@ export class HomeComponent {
     }
   }
 
+  handleAssetStoreScrape(): void {
+    const url = this.form.get('embed.url')?.value?.trim();
+    if (!url || !this.isUnityAssetStoreUrl(url)) {
+      this.status = { type: 'error', text: 'Enter a valid Unity Asset Store URL before fetching.' };
+      this.changeDetectorRef.markForCheck();
+      return;
+    }
+
+    this.status = null;
+    this.isScraping = true;
+    this.changeDetectorRef.markForCheck();
+    const token = this.form.getRawValue().token ?? '';
+    this.embedService
+      .fetchAssetStoreData(url, token)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => {
+          this.isScraping = false;
+          this.changeDetectorRef.markForCheck();
+        })
+      )
+      .subscribe({
+        next: (data) => {
+          if (!this.hasAssetStoreData(data)) {
+            this.status = { type: 'error', text: 'No data found for this Asset Store URL.' };
+            this.changeDetectorRef.markForCheck();
+            return;
+          }
+          this.applyAssetStoreData(url, data);
+        },
+        error: (error: Error) => {
+          this.status = {
+            type: 'error',
+            text: error?.message || 'Failed to fetch Asset Store data.',
+          };
+          this.changeDetectorRef.markForCheck();
+        },
+      });
+  }
+
   private createField(name: string, value: string, inline: boolean): FormGroup {
     return this.formBuilder.group({
       name: new FormControl(name, { nonNullable: true }),
       value: new FormControl(value, { nonNullable: true }),
       inline: new FormControl(inline, { nonNullable: true }),
     });
+  }
+
+  private applyAssetStoreData(url: string, data: AssetStoreDataWithPromo): void {
+    const embedGroup = this.form.get('embed') as FormGroup;
+    if (embedGroup.get('url')?.value !== url) {
+      embedGroup.get('url')?.setValue(url);
+    }
+    if (data.title) {
+      embedGroup.get('title')?.setValue(data.title);
+    }
+    if (data.description) {
+      embedGroup.get('description')?.setValue(data.description);
+    }
+    if (data.imageUrl) {
+      embedGroup.get('image.url')?.setValue(data.imageUrl);
+    }
+    if (data.promoCode) {
+      this.applyPromoCode(data.promoCode);
+    }
+  }
+
+  private hasAssetStoreData(data: AssetStoreData | null | undefined): boolean {
+    if (!data) {
+      return false;
+    }
+    return Boolean(data.title || data.description || data.imageUrl);
+  }
+
+  private applyPromoCode(code: string): void {
+    const normalized = code.trim();
+    if (!normalized) {
+      return;
+    }
+    const field = this.fieldsArray.controls.find((control) => {
+      const nameValue = control.get('name')?.value?.toString().trim().toLowerCase();
+      return nameValue === 'código' || nameValue === 'codigo' || nameValue === 'code';
+    });
+    field?.get('value')?.setValue(normalized);
+  }
+
+  private isUnityAssetStoreUrl(url: string): boolean {
+    try {
+      const parsed = new URL(url);
+      return parsed.hostname === 'assetstore.unity.com' && parsed.pathname.startsWith('/packages/');
+    } catch {
+      return false;
+    }
   }
 
   private toHexColor(color: number | null | undefined): string {

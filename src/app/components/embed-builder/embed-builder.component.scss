@@ -100,6 +100,11 @@ h2 {
   resize: vertical;
 }
 
+.field__actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
 .field.checkbox {
   flex-direction: row;
   align-items: center;

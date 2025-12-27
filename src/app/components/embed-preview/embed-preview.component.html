@@ -1,7 +1,6 @@
 <section class="preview" [style.--accent]="accentColor">
   <header class="preview__header">
     <p class="eyebrow">Live preview</p>
-    <h2>Discord Embed</h2>
   </header>
 
   <article class="embed">
@@ -9,7 +8,13 @@
     <div class="embed__body">
       <div class="embed__top">
         <div>
-          <a *ngIf="embed.url; else titleOnly" class="embed__title" [href]="embed.url" target="_blank" rel="noreferrer">
+          <a
+            *ngIf="embed.url; else titleOnly"
+            class="embed__title"
+            [href]="embed.url"
+            target="_blank"
+            rel="noreferrer"
+          >
             {{ embed.title }}
           </a>
           <ng-template #titleOnly>
@@ -17,7 +22,12 @@
           </ng-template>
           <p class="embed__description">{{ embed.description }}</p>
         </div>
-        <img *ngIf="embed.thumbnail?.url" class="embed__thumbnail" [src]="embed.thumbnail.url" alt="Thumbnail">
+        <img
+          *ngIf="embed.thumbnail?.url"
+          class="embed__thumbnail"
+          [src]="embed.thumbnail.url"
+          alt="Thumbnail"
+        />
       </div>
 
       <div class="embed__fields" *ngIf="embed.fields?.length">
@@ -27,7 +37,12 @@
         </div>
       </div>
 
-      <img *ngIf="embed.image?.url" class="embed__image" [src]="embed.image.url" alt="Banner image">
+      <img
+        *ngIf="embed.image?.url"
+        class="embed__image"
+        [src]="embed.image.url"
+        alt="Banner image"
+      />
 
       <footer class="embed__footer" *ngIf="embed.footer?.text">
         <span>{{ embed.footer.text }}</span>
