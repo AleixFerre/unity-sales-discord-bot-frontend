@@ -18,19 +18,14 @@ npm install
 
 ## Configure the backend URL
 
-This app reads the backend endpoint from a runtime `env.js` file so deployments can change it without rebuilding.
+This app reads the backend base URL from `src/app/config.json` and sends requests to `${backendUrl}/message`, so any change requires a rebuild.
 
-1. Edit `public/env.js` and set:
+1. Edit `src/app/config.json`:
 
-```js
-window.__ENV = window.__ENV || {};
-window.__ENV.BACKEND_URL = "https://your-backend.example.com/message";
-```
-
-2. Optional build-time fallback:
-
-```bash
-export NG_APP_BACKEND_URL="https://your-backend.example.com/message"
+```json
+{
+  "backendUrl": "https://your-backend.example.com"
+}
 ```
 
 ## Run locally
@@ -51,15 +46,14 @@ The output is in `dist/unity-sales-frontend/`.
 
 ## Deploy
 
-This is a static site. Upload the contents of `dist/unity-sales-frontend/` to any static host and make sure `env.js` is alongside `index.html`.
+This is a static site. Upload the contents of `dist/unity-sales-frontend/` to any static host. Remember to update `src/app/config.json` and rebuild whenever the backend URL changes.
 
 For GitHub Pages (configured in `package.json`):
 
 ```bash
 npm run deploy
 ```
-
-Then update `env.js` in your published site to point at your backend.
+Then update `src/app/config.json`, rebuild, and deploy again if the backend URL changes.
 
 ## Usage
 
