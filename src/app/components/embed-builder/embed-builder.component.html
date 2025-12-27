@@ -1,0 +1,91 @@
+<div class="builder" [formGroup]="form">
+  <header class="builder__header">
+    <div>
+      <p class="eyebrow">Discord Embed</p>
+      <h1>Unity Sales Embed Builder</h1>
+      <p class="subtext">Craft the promo message, preview it live, then ship to your bot backend.</p>
+    </div>
+    <span class="badge">Dark UI</span>
+  </header>
+
+  <section class="panel">
+    <h2>Auth</h2>
+    <label class="field">
+      <span>Bearer token</span>
+      <input type="password" formControlName="token" placeholder="••••••••••••••" autocomplete="off">
+    </label>
+  </section>
+
+  <section class="panel" [formGroup]="embedGroup">
+    <h2>Core content</h2>
+    <div class="grid">
+      <label class="field">
+        <span>Title</span>
+        <input type="text" formControlName="title" placeholder="Oferta Unity">
+      </label>
+      <label class="field">
+        <span>URL</span>
+        <input type="url" formControlName="url" placeholder="https://assetstore.unity.com">
+      </label>
+    </div>
+    <label class="field">
+      <span>Description</span>
+      <textarea rows="3" formControlName="description" placeholder="Hasta 50% en assets"></textarea>
+    </label>
+    <div class="grid">
+      <label class="field">
+        <span>Accent color (decimal)</span>
+        <input type="number" formControlName="color" min="0" max="16777215">
+      </label>
+    </div>
+  </section>
+
+  <section class="panel" [formGroup]="embedGroup">
+    <div class="panel__heading">
+      <h2>Fields</h2>
+      <button type="button" class="ghost" (click)="addField()">Add field</button>
+    </div>
+    <div class="field-list" formArrayName="fields">
+      <div class="field-card" *ngFor="let field of fieldsArray.controls; let i = index" [formGroupName]="i">
+        <label class="field">
+          <span>Name</span>
+          <input type="text" formControlName="name" placeholder="Precio">
+        </label>
+        <label class="field">
+          <span>Value</span>
+          <input type="text" formControlName="value" placeholder="$19.99">
+        </label>
+        <label class="field checkbox">
+          <input type="checkbox" formControlName="inline">
+          <span>Inline</span>
+        </label>
+        <button type="button" class="ghost danger" (click)="removeField(i)" [disabled]="fieldsArray.length <= 1">
+          Remove
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" [formGroup]="embedGroup">
+    <h2>Media</h2>
+    <div class="grid">
+      <label class="field" formGroupName="thumbnail">
+        <span>Thumbnail URL</span>
+        <input type="url" formControlName="url" placeholder="https://example.com/thumb.png">
+      </label>
+      <label class="field" formGroupName="image">
+        <span>Image URL</span>
+        <input type="url" formControlName="url" placeholder="https://example.com/banner.png">
+      </label>
+    </div>
+  </section>
+
+  <section class="panel" [formGroup]="embedGroup">
+    <h2>Footer</h2>
+    <label class="field" formGroupName="footer">
+      <span>Footer text</span>
+      <input type="text" formControlName="text" placeholder="Unity Sales Bot">
+    </label>
+  </section>
+
+</div>

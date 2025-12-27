@@ -1,0 +1,16 @@
+<div class="page">
+  <div class="page__glow"></div>
+  <form class="page__content" [formGroup]="form" (ngSubmit)="handleSend()">
+    <app-embed-builder class="builder" [form]="form"></app-embed-builder>
+
+    <div class="preview">
+      <app-embed-preview [embed]="previewEmbed"></app-embed-preview>
+      <button class="primary" type="submit" [disabled]="form.invalid || isSubmitting">
+        {{ isSubmitting ? 'Sending...' : 'Send embed to backend' }}
+      </button>
+      <div class="status" *ngIf="status" [class.error]="status.type === 'error'">
+        {{ status.text }}
+      </div>
+    </div>
+  </form>
+</div>

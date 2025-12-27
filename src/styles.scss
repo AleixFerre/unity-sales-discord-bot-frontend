@@ -1,1 +1,35 @@
-/* You can add global styles to this file, and also import other style files */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  color-scheme: dark;
+  --bg: #05070d;
+  --panel: rgba(12, 16, 24, 0.92);
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --border: rgba(148, 163, 184, 0.2);
+  --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  --heading-font: 'Sora', 'Segoe UI', sans-serif;
+  --mono-font: 'Space Mono', 'Courier New', monospace;
+}
+
+body {
+  margin: 0;
+  font-family: var(--heading-font);
+  background: radial-gradient(circle at top, #0b1120, #03050a);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+app-root {
+  display: block;
+}
+
+input,
+textarea,
+button {
+  font-family: inherit;
+}
