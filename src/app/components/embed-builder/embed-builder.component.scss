@@ -86,6 +86,16 @@ h2 {
   font-size: 0.95rem;
 }
 
+.field.error input {
+  border-color: rgba(248, 113, 113, 0.6);
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.3);
+}
+
+.error-text {
+  color: #f87171;
+  font-size: 0.75rem;
+}
+
 .field textarea {
   resize: vertical;
 }

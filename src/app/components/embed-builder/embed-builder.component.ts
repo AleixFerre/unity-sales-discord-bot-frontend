@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
@@ -10,6 +10,8 @@ import { FormArray, FormControl, FormGroup, ReactiveFormsModule } from '@angular
 })
 export class EmbedBuilderComponent {
   @Input({ required: true }) form!: FormGroup;
+  @Input() colorHex = '#000000';
+  @Output() colorChange = new EventEmitter<string>();
 
   get embedGroup(): FormGroup {
     return this.form.get('embed') as FormGroup;
