@@ -1,59 +1,73 @@
-# UnitySalesFrontend
+# Unity Sales Embed Builder (Frontend)
+_Important: this UI requires the backend repo to send embeds. Grab both repos._
+_Backend repo: https://github.com/AleixFerre/unity-sales-discord-bot_
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.7.
+Dark-themed Angular UI for composing Discord embeds and sending them to the backend API.
 
-## Development server
+## Requirements
 
-To start a local development server, run:
+- Node.js 18+
+- npm or Bun
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Install
 
 ```bash
-ng generate component component-name
+cd unity-sales-frontend
+npm install
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Configure the backend URL
+
+This app reads the backend endpoint from a runtime `env.js` file so deployments can change it without rebuilding.
+
+1. Edit `public/env.js` and set:
+
+```js
+window.__ENV = window.__ENV || {};
+window.__ENV.BACKEND_URL = "https://your-backend.example.com/message";
+```
+
+2. Optional build-time fallback:
 
 ```bash
-ng generate --help
+export NG_APP_BACKEND_URL="https://your-backend.example.com/message"
 ```
 
-## Building
-
-To build the project run:
+## Run locally
 
 ```bash
-ng build
+npm start
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Open `http://localhost:4200`.
 
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+## Build
 
 ```bash
-ng test
+npm run build
 ```
 
-## Running end-to-end tests
+The output is in `dist/unity-sales-frontend/`.
 
-For end-to-end (e2e) testing, run:
+## Deploy
+
+This is a static site. Upload the contents of `dist/unity-sales-frontend/` to any static host and make sure `env.js` is alongside `index.html`.
+
+For GitHub Pages (configured in `package.json`):
 
 ```bash
-ng e2e
+npm run deploy
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Then update `env.js` in your published site to point at your backend.
 
-## Additional Resources
+## Usage
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- Fill in the embed fields.
+- Paste the backend `API_TOKEN` in the bearer token field (sent as `Authorization: Bearer <token>`).
+- Click “Send embed to backend”.
+
+## Related repos
+
+- https://github.com/AleixFerre/unity-sales-discord-bot
+- https://github.com/AleixFerre/unity-sales-discord-bot-frontend
