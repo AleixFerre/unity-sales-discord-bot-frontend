@@ -13,7 +13,7 @@
     <div class="preview">
       <app-embed-preview [embed]="previewEmbed"></app-embed-preview>
       <button class="primary" type="submit" [disabled]="form.invalid || isSubmitting">
-        {{ isSubmitting ? 'Sending...' : 'Send embed to backend' }}
+        {{ isSubmitting ? 'Sending...' : 'Post message' }}
       </button>
       <div class="status" *ngIf="status" [class.error]="status.type === 'error'">
         {{ status.text }}

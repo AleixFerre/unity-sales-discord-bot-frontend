@@ -55,7 +55,7 @@ export class HomeComponent {
         this.createField('Codi', 'CODE', true),
       ]),
       footer: this.formBuilder.group({
-        text: new FormControl('Unity Sales Bot', {
+        text: new FormControl('Unity Sales Bot © ' + new Date().getFullYear(), {
           nonNullable: true,
           validators: [Validators.required],
         }),

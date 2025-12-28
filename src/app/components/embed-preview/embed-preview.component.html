@@ -32,7 +32,7 @@
       <div class="embed__fields" *ngIf="embed.fields?.length">
         <div class="embed__field" *ngFor="let field of embed.fields" [class.inline]="field.inline">
           <p class="field__name">{{ field.name }}</p>
-          <p class="field__value">{{ field.value }}</p>
+          <p class="field__value" [innerHTML]="formatFieldValue(field.value)"></p>
         </div>
       </div>
 

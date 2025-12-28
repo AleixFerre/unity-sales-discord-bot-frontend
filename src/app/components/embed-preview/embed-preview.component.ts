@@ -16,4 +16,18 @@ export class EmbedPreviewComponent {
     const color = this.embed?.color ?? 0;
     return `#${color.toString(16).padStart(6, '0')}`;
   }
+
+  formatFieldValue(value: string | null | undefined): string {
+    const escaped = this.escapeHtml(value ?? '');
+    return escaped.replace(/~~(.*?)~~/g, '<span class="strike">$1</span>');
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 }
