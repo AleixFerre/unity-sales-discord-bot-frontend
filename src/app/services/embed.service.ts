@@ -8,6 +8,7 @@ import { EmbedRequest } from '../models/embed.model';
 export type AssetStoreData = {
   title?: string;
   imageUrl?: string;
+  price?: string;
 };
 
 @Injectable({ providedIn: 'root' })

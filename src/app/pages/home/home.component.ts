@@ -50,7 +50,7 @@ export class HomeComponent {
         validators: [Validators.required, Validators.pattern(/^https?:\/\/.+/i)],
       }),
       fields: this.formBuilder.array([
-        this.createField('Descompte', '100%', true),
+        this.createField('Preu', '100%', true),
         this.createField('Fi', '12/01/2026', true),
         this.createField('Codi', 'CODE', true),
       ]),
@@ -199,6 +199,9 @@ export class HomeComponent {
     if (typeof accentColor === 'number') {
       embedGroup.get('color')?.setValue(accentColor);
     }
+    if (data.price) {
+      this.applyDiscountPrice(data.price);
+    }
     if (data.promoCode) {
       this.applyPromoCode(data.promoCode);
     }
@@ -208,7 +211,7 @@ export class HomeComponent {
     if (!data) {
       return false;
     }
-    return Boolean(data.title || data.imageUrl);
+    return Boolean(data.title || data.imageUrl || data.price);
   }
 
   private applyPromoCode(code: string): void {
@@ -221,6 +224,17 @@ export class HomeComponent {
       return nameValue === 'código' || nameValue === 'codigo' || nameValue === 'code';
     });
     field?.get('value')?.setValue(normalized);
+  }
+
+  private applyDiscountPrice(price: string): void {
+    const formatted = this.formatPrice(price);
+    if (!formatted) {
+      return;
+    }
+    const field = this.fieldsArray.controls.find((control) => {
+      return control.get('name')?.value?.toString().trim().toLowerCase() === 'preu';
+    });
+    field?.get('value')?.setValue(`~~${formatted}~~ GRATIS`);
   }
 
   private isSupportedAssetUrl(url: string): boolean {
@@ -250,5 +264,14 @@ export class HomeComponent {
       return 0;
     }
     return parsed;
+  }
+
+  private formatPrice(price: string): string {
+    const trimmed = price.trim();
+    if (!trimmed) {
+      return '';
+    }
+    const normalized = trimmed.replace(/[$€£]/g, '').trim();
+    return normalized ? `€${normalized}` : '';
   }
 }
