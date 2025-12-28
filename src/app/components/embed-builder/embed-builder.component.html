@@ -37,7 +37,7 @@
       </label>
       <label class="field" [class.error]="embedGroup.get('url')?.touched && embedGroup.get('url')?.invalid">
         <span>URL</span>
-        <input type="url" formControlName="url" placeholder="https://assetstore.unity.com" />
+        <input type="url" formControlName="url" placeholder="https://assetstore.unity.com or https://fab.com" />
         <small
           class="error-text"
           *ngIf="embedGroup.get('url')?.touched && embedGroup.get('url')?.hasError('required')"
@@ -58,15 +58,11 @@
             (click)="assetStoreScrape.emit()"
             [disabled]="isScraping || !hasToken"
           >
-            {{ isScraping ? 'Fetching asset data...' : 'Fetch from Asset Store' }}
+            {{ isScraping ? 'Fetching asset data...' : 'Fetch from Asset Store or Fab' }}
           </button>
         </div>
       </label>
     </div>
-    <label class="field">
-      <span>Description</span>
-      <textarea rows="3" formControlName="description" placeholder="Hasta 50% en assets"></textarea>
-    </label>
     <div class="grid">
       <label class="field">
         <span>Accent color (decimal)</span>

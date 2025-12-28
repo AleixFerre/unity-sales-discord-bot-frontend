@@ -7,7 +7,6 @@ import { EmbedRequest } from '../models/embed.model';
 
 export type AssetStoreData = {
   title?: string;
-  description?: string;
   imageUrl?: string;
 };
 

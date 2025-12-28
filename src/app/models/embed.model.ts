@@ -14,7 +14,6 @@ export interface EmbedMedia {
 
 export interface EmbedConfig {
   title: string;
-  description: string;
   color: number;
   url: string;
   fields: EmbedField[];

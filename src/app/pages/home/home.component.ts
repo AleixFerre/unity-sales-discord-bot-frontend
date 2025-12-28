@@ -13,6 +13,7 @@ import { finalize } from 'rxjs';
 
 import { EmbedBuilderComponent } from '../../components/embed-builder/embed-builder.component';
 import { EmbedPreviewComponent } from '../../components/embed-preview/embed-preview.component';
+import { getStoreAccentColor, getStoreThumbnailUrl } from '../../constants/store-thumbnails';
 import { EmbedConfig, EmbedRequest } from '../../models/embed.model';
 import { AssetStoreData, EmbedService } from '../../services/embed.service';
 
@@ -40,9 +41,6 @@ export class HomeComponent {
         nonNullable: true,
         validators: [Validators.required],
       }),
-      description: new FormControl('Build sleek, dynamic interfaces that adapt automatically', {
-        nonNullable: true,
-      }),
       color: new FormControl(3447003, {
         nonNullable: true,
         validators: [Validators.required, Validators.min(0), Validators.max(16777215)],
@@ -63,10 +61,7 @@ export class HomeComponent {
         }),
       }),
       thumbnail: this.formBuilder.group({
-        url: new FormControl(
-          'https://cdn.discordapp.com/app-icons/1454213455593865428/4564252e658bed263baf2d8e8287beea.png?size=256',
-          { nonNullable: true }
-        ),
+        url: new FormControl('', { nonNullable: true }),
       }),
       image: this.formBuilder.group({
         url: new FormControl(
@@ -138,8 +133,11 @@ export class HomeComponent {
 
   handleAssetStoreScrape(): void {
     const url = this.form.get('embed.url')?.value?.trim();
-    if (!url || !this.isUnityAssetStoreUrl(url)) {
-      this.status = { type: 'error', text: 'Enter a valid Unity Asset Store URL before fetching.' };
+    if (!url || !this.isSupportedAssetUrl(url)) {
+      this.status = {
+        type: 'error',
+        text: 'Enter a valid Unity Asset Store or Fab listing URL before fetching.',
+      };
       this.changeDetectorRef.markForCheck();
       return;
     }
@@ -160,7 +158,7 @@ export class HomeComponent {
       .subscribe({
         next: (data) => {
           if (!this.hasAssetStoreData(data)) {
-            this.status = { type: 'error', text: 'No data found for this Asset Store URL.' };
+            this.status = { type: 'error', text: 'No data found for this store listing URL.' };
             this.changeDetectorRef.markForCheck();
             return;
           }
@@ -169,7 +167,7 @@ export class HomeComponent {
         error: (error: Error) => {
           this.status = {
             type: 'error',
-            text: error?.message || 'Failed to fetch Asset Store data.',
+            text: error?.message || 'Failed to fetch store data.',
           };
           this.changeDetectorRef.markForCheck();
         },
@@ -192,11 +190,14 @@ export class HomeComponent {
     if (data.title) {
       embedGroup.get('title')?.setValue(data.title);
     }
-    if (data.description) {
-      embedGroup.get('description')?.setValue(data.description);
-    }
     if (data.imageUrl) {
       embedGroup.get('image.url')?.setValue(data.imageUrl);
+    }
+    const thumbnailUrl = getStoreThumbnailUrl(url);
+    embedGroup.get('thumbnail.url')?.setValue(thumbnailUrl ?? '');
+    const accentColor = getStoreAccentColor(url);
+    if (typeof accentColor === 'number') {
+      embedGroup.get('color')?.setValue(accentColor);
     }
     if (data.promoCode) {
       this.applyPromoCode(data.promoCode);
@@ -207,7 +208,7 @@ export class HomeComponent {
     if (!data) {
       return false;
     }
-    return Boolean(data.title || data.description || data.imageUrl);
+    return Boolean(data.title || data.imageUrl);
   }
 
   private applyPromoCode(code: string): void {
@@ -222,10 +223,16 @@ export class HomeComponent {
     field?.get('value')?.setValue(normalized);
   }
 
-  private isUnityAssetStoreUrl(url: string): boolean {
+  private isSupportedAssetUrl(url: string): boolean {
     try {
       const parsed = new URL(url);
-      return parsed.hostname === 'assetstore.unity.com' && parsed.pathname.startsWith('/packages/');
+      if (parsed.hostname === 'assetstore.unity.com') {
+        return parsed.pathname.startsWith('/packages/');
+      }
+      if (parsed.hostname === 'www.fab.com' || parsed.hostname === 'fab.com') {
+        return parsed.pathname.startsWith('/listings/');
+      }
+      return false;
     } catch {
       return false;
     }
