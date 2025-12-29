@@ -5,9 +5,13 @@
       class="builder"
       [form]="form"
       [colorHex]="colorHex"
-      (colorChange)="handleColorChange($event)"
+      [messageType]="messageTypeControl.value"
       [isScraping]="isScraping"
+      (colorChange)="handleColorChange($event)"
       (assetStoreScrape)="handleAssetStoreScrape()"
+      (bulkJsonOpen)="openBulkJsonModal()"
+      (bulkJsonCopy)="handleCopyJson()"
+      (messageTypeSelect)="handleMessageTypeSelection($event)"
     ></app-embed-builder>
 
     <div class="preview">
@@ -15,9 +19,40 @@
       <button class="primary" type="submit" [disabled]="form.invalid || isSubmitting">
         {{ isSubmitting ? 'Sending...' : 'Post message' }}
       </button>
-      <div class="status" *ngIf="status" [class.error]="status.type === 'error'">
-        {{ status.text }}
-      </div>
+      @if (status) {
+        <div class="status" [class.error]="status.type === 'error'">
+          {{ status.text }}
+        </div>
+      }
     </div>
   </form>
+  @if (isBulkModalOpen) {
+    <div class="modal">
+      <div class="modal__backdrop" (click)="closeBulkJsonModal()"></div>
+      <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="bulk-json-title">
+        <div class="modal__header">
+          <h3 id="bulk-json-title">Bulk update from JSON</h3>
+          <p class="modal__hint">
+            Paste the JSON payload returned by the scraper. Supported keys: title, imageUrl, price,
+            promoCode, url, messageType.
+          </p>
+        </div>
+        <label class="modal__field">
+          <span>JSON payload</span>
+          <textarea
+            class="modal__textarea"
+            [formControl]="bulkJsonControl"
+            placeholder='{"messageType":"unity","title":"New title","imageUrl":"https://...","price":"19.99","promoCode":"SAVE10"}'
+          ></textarea>
+          @if (bulkJsonError) {
+            <small class="error-text">{{ bulkJsonError }}</small>
+          }
+        </label>
+        <div class="modal__actions">
+          <button type="button" class="ghost" (click)="closeBulkJsonModal()">Cancel</button>
+          <button type="button" class="primary" (click)="applyBulkJson()">Apply updates</button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

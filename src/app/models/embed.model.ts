@@ -13,6 +13,7 @@ export interface EmbedMedia {
 }
 
 export interface EmbedConfig {
+  messageType?: MessageType;
   title: string;
   color: number;
   url: string;
@@ -21,6 +22,8 @@ export interface EmbedConfig {
   thumbnail: EmbedMedia;
   image: EmbedMedia;
 }
+
+export type MessageType = 'unity' | 'fab' | 'custom';
 
 export interface EmbedRequest {
   embed: EmbedConfig;

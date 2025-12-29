@@ -8,44 +8,44 @@
     <div class="embed__body">
       <div class="embed__top">
         <div>
-          <a
-            *ngIf="embed.url; else titleOnly"
-            class="embed__title"
-            [href]="embed.url"
-            target="_blank"
-            rel="noreferrer"
-          >
-            {{ embed.title }}
-          </a>
-          <ng-template #titleOnly>
+          @if (embed.url) {
+            <a
+              class="embed__title"
+              [href]="embed.url"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {{ embed.title }}
+            </a>
+          } @else {
             <p class="embed__title">{{ embed.title }}</p>
-          </ng-template>
+          }
         </div>
-        <img
-          *ngIf="embed.thumbnail?.url"
-          class="embed__thumbnail"
-          [src]="embed.thumbnail.url"
-          alt="Thumbnail"
-        />
+        @if (embed.thumbnail.url) {
+          <img class="embed__thumbnail" [src]="embed.thumbnail.url" alt="Thumbnail" />
+        }
       </div>
 
-      <div class="embed__fields" *ngIf="embed.fields?.length">
-        <div class="embed__field" *ngFor="let field of embed.fields" [class.inline]="field.inline">
-          <p class="field__name">{{ field.name }}</p>
-          <p class="field__value" [innerHTML]="formatFieldValue(field.value)"></p>
+      @if (embed.fields.length) {
+        <div class="embed__fields">
+          @for (field of embed.fields; track $index) {
+            <div class="embed__field" [class.inline]="field.inline">
+              <p class="field__name">{{ field.name }}</p>
+              <p class="field__value" [innerHTML]="formatFieldValue(field.value)"></p>
+            </div>
+          }
         </div>
-      </div>
+      }
 
-      <img
-        *ngIf="embed.image?.url"
-        class="embed__image"
-        [src]="embed.image.url"
-        alt="Banner image"
-      />
+      @if (embed.image.url) {
+        <img class="embed__image" [src]="embed.image.url" alt="Banner image" />
+      }
 
-      <footer class="embed__footer" *ngIf="embed.footer?.text">
-        <span>{{ embed.footer.text }}</span>
-      </footer>
+      @if (embed.footer.text) {
+        <footer class="embed__footer">
+          <span>{{ embed.footer.text }}</span>
+        </footer>
+      }
     </div>
   </article>
 </section>
