@@ -518,7 +518,8 @@ export class HomeComponent {
     if (payload.fields !== undefined) {
       this.fieldsArray.clear();
       payload.fields.forEach((field) => {
-        this.fieldsArray.push(this.createField(field.name, field.value, field.inline));
+        const normalizedValue = this.normalizeDateInputValue(field.name, field.value);
+        this.fieldsArray.push(this.createField(field.name, normalizedValue, field.inline));
       });
     }
     if (payload.footer?.text !== undefined) {
@@ -652,5 +653,24 @@ export class HomeComponent {
     }
     const [, year, month, day] = match;
     return `${day}/${month}/${year}`;
+  }
+
+  private normalizeDateInputValue(name: string, value: string): string {
+    if (!this.isDateField(name)) {
+      return value;
+    }
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return '';
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+    const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(trimmed);
+    if (!match) {
+      return trimmed;
+    }
+    const [, day, month, year] = match;
+    return `${year}-${month}-${day}`;
   }
 }
