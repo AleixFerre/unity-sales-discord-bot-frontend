@@ -57,6 +57,16 @@ export class EmbedBuilderComponent {
     return 'Fetch';
   }
 
+  get urlPlaceholder(): string {
+    if (this.messageType === 'fab') {
+      return 'https://www.fab.com/listings/...';
+    }
+    if (this.messageType === 'unity') {
+      return 'https://assetstore.unity.com/packages/...';
+    }
+    return 'https://example.com';
+  }
+
   addField(): void {
     this.fieldsArray.push(
       new FormGroup({

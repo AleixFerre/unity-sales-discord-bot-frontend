@@ -81,7 +81,7 @@
           [class.error]="embedGroup.get('url')?.touched && embedGroup.get('url')?.invalid"
         >
           <span>URL</span>
-          <input type="url" formControlName="url" placeholder="https://assetstore.unity.com" />
+          <input type="url" formControlName="url" [placeholder]="urlPlaceholder" />
           @if (embedGroup.get('url')?.touched && embedGroup.get('url')?.hasError('required')) {
             <small class="error-text">URL is required.</small>
           }
@@ -89,7 +89,7 @@
             <small class="error-text">Enter a valid URL starting with http:// or https://.</small>
           }
           @if (embedGroup.get('url')?.touched && embedGroup.get('url')?.hasError('storeMismatch')) {
-            <small class="error-text">URL must be a {{ storeLabel }} listing.</small>
+            <small class="error-text">URL must be a {{ storeLabel }} URL.</small>
           }
           @if (!hasToken && messageType !== 'custom') {
             <small class="error-text">Bearer token required to fetch.</small>

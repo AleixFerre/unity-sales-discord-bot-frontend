@@ -195,6 +195,21 @@ export class EmbedFormService {
         return parsed.hostname === 'assetstore.unity.com' && parsed.pathname.startsWith('/packages/');
       }
       if (messageType === 'fab') {
+        return parsed.hostname === 'www.fab.com' || parsed.hostname === 'fab.com';
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  isSupportedAssetListingUrl(url: string, messageType: MessageType): boolean {
+    try {
+      const parsed = new URL(url);
+      if (messageType === 'unity') {
+        return parsed.hostname === 'assetstore.unity.com' && parsed.pathname.startsWith('/packages/');
+      }
+      if (messageType === 'fab') {
         return (
           (parsed.hostname === 'www.fab.com' || parsed.hostname === 'fab.com') &&
           parsed.pathname.startsWith('/listings/')

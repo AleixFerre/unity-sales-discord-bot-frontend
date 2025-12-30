@@ -201,7 +201,7 @@ export class HomeComponent {
       return;
     }
     const url = this.form.get('embed.url')?.value?.trim();
-    if (!url || !this.embedFormService.isSupportedAssetUrl(url, messageType)) {
+    if (!url || !this.embedFormService.isSupportedAssetListingUrl(url, messageType)) {
       this.status = {
         type: 'error',
         text: 'Enter a valid Unity Asset Store or Fab listing URL before fetching.',
@@ -348,7 +348,7 @@ export class HomeComponent {
       }
       if (urlFromPayload) {
         if (!this.embedFormService.isSupportedAssetUrl(urlFromPayload, effectiveType)) {
-          this.bulkJsonError = 'Provide a valid store listing URL for the selected message type.';
+          this.bulkJsonError = 'Provide a valid store URL for the selected message type.';
           this.changeDetectorRef.markForCheck();
           return;
         }
