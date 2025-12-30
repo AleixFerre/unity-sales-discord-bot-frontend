@@ -26,5 +26,6 @@ export interface EmbedConfig {
 export type MessageType = 'unity' | 'fab' | 'custom';
 
 export interface EmbedRequest {
-  embed: EmbedConfig;
+  embed?: EmbedConfig;
+  embeds?: EmbedConfig[];
 }

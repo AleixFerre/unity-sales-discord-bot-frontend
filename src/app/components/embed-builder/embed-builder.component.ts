@@ -10,27 +10,21 @@ import { MessageType } from '../../models/embed.model';
   styleUrl: './embed-builder.component.scss',
 })
 export class EmbedBuilderComponent {
-  @Input({ required: true }) form!: FormGroup;
+  @Input({ required: true }) embedForm!: FormGroup;
   @Input() colorHex = '#000000';
   @Input() isScraping = false;
+  @Input() hasToken = false;
   @Input() messageType: MessageType | null = null;
   @Output() colorChange = new EventEmitter<string>();
   @Output() assetStoreScrape = new EventEmitter<void>();
-  @Output() bulkJsonOpen = new EventEmitter<void>();
-  @Output() bulkJsonCopy = new EventEmitter<void>();
   @Output() messageTypeSelect = new EventEmitter<MessageType>();
 
   get embedGroup(): FormGroup {
-    return this.form.get('embed') as FormGroup;
+    return this.embedForm;
   }
 
   get fieldsArray(): FormArray {
     return this.embedGroup.get('fields') as FormArray;
-  }
-
-  get hasToken(): boolean {
-    const token = this.form?.get('token')?.value;
-    return typeof token === 'string' && token.trim().length > 0;
   }
 
   get isCustomThumbnail(): boolean {

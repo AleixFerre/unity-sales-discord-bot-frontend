@@ -1,21 +1,101 @@
 <div class="page">
   <div class="page__glow"></div>
   <form class="page__content" [formGroup]="form" (ngSubmit)="handleSend()">
-    <app-embed-builder
-      class="builder"
-      [form]="form"
-      [colorHex]="colorHex"
-      [messageType]="messageTypeControl.value"
-      [isScraping]="isScraping"
-      (colorChange)="handleColorChange($event)"
-      (assetStoreScrape)="handleAssetStoreScrape()"
-      (bulkJsonOpen)="openBulkJsonModal()"
-      (bulkJsonCopy)="handleCopyJson()"
-      (messageTypeSelect)="handleMessageTypeSelection($event)"
-    ></app-embed-builder>
+    <div class="builder">
+      <header class="builder__header">
+        <div>
+          <p class="eyebrow">Discord Embed</p>
+          <p class="subtext">
+            Craft the promo message, preview it live, then ship to your bot backend.
+          </p>
+          <div class="builder__actions">
+            <button type="button" class="ghost" (click)="openBulkJsonModal()">
+              Bulk update from JSON
+            </button>
+            <button type="button" class="ghost" (click)="handleCopyJson()">
+              Copy JSON payload
+            </button>
+            <button type="button" class="ghost" (click)="addEmbed()">Add embed</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="panel">
+        <h2>Auth</h2>
+        <label class="field" [class.error]="form.get('token')?.touched && form.get('token')?.invalid">
+          <span>Bearer token</span>
+          <input
+            type="password"
+            formControlName="token"
+            placeholder="••••••••••••••"
+            autocomplete="off"
+          />
+          @if (form.get('token')?.touched && form.get('token')?.invalid) {
+            <small class="error-text">Token is required.</small>
+          }
+        </label>
+      </section>
+
+      <div class="embed-stack">
+        @for (embed of embedsArray.controls; track $index; let i = $index) {
+          <section class="embed-card">
+            <div class="embed-card__header">
+              <button
+                type="button"
+                class="embed-card__toggle"
+                [attr.aria-expanded]="expandedEmbedIndex === i"
+                (click)="toggleEmbed(i)"
+              >
+                <span>Embed {{ i + 1 }}</span>
+                <span class="embed-card__meta">
+                  @if (getMessageType(i)) {
+                    {{ getMessageType(i) }}
+                  } @else {
+                    Unset
+                  }
+                </span>
+              </button>
+              <div class="embed-card__actions">
+                <button
+                  type="button"
+                  class="ghost"
+                  (click)="toggleEmbed(i)"
+                >
+                  {{ expandedEmbedIndex === i ? 'Collapse' : 'Expand' }}
+                </button>
+                <button
+                  type="button"
+                  class="ghost danger"
+                  [disabled]="embedsArray.length === 1"
+                  (click)="removeEmbed(i)"
+                >
+                  Remove embed
+                </button>
+              </div>
+            </div>
+            @if (expandedEmbedIndex === i) {
+              <app-embed-builder
+                [embedForm]="$any(embed)"
+                [colorHex]="getColorHex(i)"
+                [messageType]="getMessageType(i)"
+                [isScraping]="isScraping(i)"
+                [hasToken]="hasToken"
+                (colorChange)="handleColorChange(i, $event)"
+                (assetStoreScrape)="handleAssetStoreScrape(i)"
+                (messageTypeSelect)="handleMessageTypeSelection(i, $event)"
+              ></app-embed-builder>
+            }
+          </section>
+        }
+      </div>
+    </div>
 
     <div class="preview">
-      <app-embed-preview [embed]="previewEmbed"></app-embed-preview>
+      <div class="preview__embeds">
+        @for (embed of previewEmbeds; track $index) {
+          <app-embed-preview [embed]="embed"></app-embed-preview>
+        }
+      </div>
       <button class="primary" type="submit" [disabled]="form.invalid || isSubmitting">
         {{ isSubmitting ? 'Sending...' : 'Post message' }}
       </button>
@@ -33,8 +113,8 @@
         <div class="modal__header">
           <h3 id="bulk-json-title">Bulk update from JSON</h3>
           <p class="modal__hint">
-            Paste the JSON payload returned by the scraper. Supported keys: title, imageUrl, price,
-            promoCode, url, messageType.
+            Paste a JSON payload (embed, embeds, or top-level fields like title, imageUrl, price,
+            promoCode, url, messageType).
           </p>
         </div>
         <label class="modal__field">

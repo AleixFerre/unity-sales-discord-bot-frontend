@@ -1,21 +1,4 @@
-<div class="builder" [formGroup]="form">
-  <header class="builder__header">
-    <div>
-      <p class="eyebrow">Discord Embed</p>
-      <p class="subtext">
-        Craft the promo message, preview it live, then ship to your bot backend.
-      </p>
-      <div class="builder__actions">
-        <button type="button" class="ghost" (click)="bulkJsonOpen.emit()">
-          Bulk update from JSON
-        </button>
-        <button type="button" class="ghost" (click)="bulkJsonCopy.emit()">
-          Copy JSON payload
-        </button>
-      </div>
-    </div>
-  </header>
-
+<div class="builder" [formGroup]="embedForm">
   <section class="panel">
     <h2>Message type</h2>
     <div class="message-types">
@@ -47,22 +30,6 @@
   </section>
 
   @if (messageType) {
-    <section class="panel">
-      <h2>Auth</h2>
-      <label class="field" [class.error]="form.get('token')?.touched && form.get('token')?.invalid">
-        <span>Bearer token</span>
-        <input
-          type="password"
-          formControlName="token"
-          placeholder="••••••••••••••"
-          autocomplete="off"
-        />
-        @if (form.get('token')?.touched && form.get('token')?.invalid) {
-          <small class="error-text">Token is required.</small>
-        }
-      </label>
-    </section>
-
     <section class="panel" [formGroup]="embedGroup">
       <h2>Core content</h2>
       <div class="grid">

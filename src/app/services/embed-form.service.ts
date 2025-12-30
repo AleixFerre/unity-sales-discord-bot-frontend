@@ -122,12 +122,15 @@ export class EmbedFormService {
     return payload;
   }
 
-  private extractEmbedPayload(input: Record<string, unknown>): BulkEmbedPayload | undefined {
+  extractEmbedPayload(input: Record<string, unknown>): BulkEmbedPayload | undefined {
     const embed = input['embed'];
     if (!embed || typeof embed !== 'object' || Array.isArray(embed)) {
       return undefined;
     }
-    const embedRecord = embed as Record<string, unknown>;
+    return this.extractEmbedPayloadFromRecord(embed as Record<string, unknown>);
+  }
+
+  extractEmbedPayloadFromRecord(embedRecord: Record<string, unknown>): BulkEmbedPayload | undefined {
     const payload: BulkEmbedPayload = {};
     if (
       embedRecord['messageType'] === 'unity' ||

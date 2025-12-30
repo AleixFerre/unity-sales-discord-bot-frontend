@@ -40,52 +40,55 @@ export class HomeComponent {
 
   form = this.buildForm();
 
-  previewEmbed: EmbedConfig = this.form.getRawValue().embed as EmbedConfig;
-  colorHex = this.toHexColor(this.previewEmbed.color);
+  previewEmbeds: EmbedConfig[] = this.getFormattedEmbeds();
   status: StatusMessage = null;
   isSubmitting = false;
-  isScraping = false;
   isBulkModalOpen = false;
   bulkJsonControl = new FormControl('', { nonNullable: true });
   bulkJsonError: string | null = null;
+  private readonly scrapingEmbeds = new Set<number>();
+  expandedEmbedIndex = 0;
 
   constructor() {
     this.connectForm();
   }
 
-  private buildForm(defaults?: EmbedConfig, tokenValue = ''): FormGroup {
-    const embed = defaults ?? this.buildBlankEmbed();
+  private buildForm(defaults: EmbedConfig[] = [this.buildBlankEmbed()], tokenValue = ''): FormGroup {
     return this.formBuilder.group({
       token: new FormControl(tokenValue, { validators: [Validators.required] }),
-      embed: this.formBuilder.group({
-        messageType: new FormControl<MessageType | null>(defaults?.messageType ?? null, {
-          validators: [Validators.required],
-        }),
-        title: new FormControl(embed.title, {
+      embeds: this.formBuilder.array(defaults.map((embed) => this.buildEmbedGroup(embed))),
+    });
+  }
+
+  private buildEmbedGroup(embed: EmbedConfig): FormGroup {
+    return this.formBuilder.group({
+      messageType: new FormControl<MessageType | null>(embed.messageType ?? null, {
+        validators: [Validators.required],
+      }),
+      title: new FormControl(embed.title, {
+        nonNullable: true,
+        validators: [Validators.required],
+      }),
+      color: new FormControl(embed.color, {
+        nonNullable: true,
+        validators: [Validators.required, Validators.min(0), Validators.max(16777215)],
+      }),
+      url: new FormControl(embed.url, {
+        nonNullable: true,
+        validators: [Validators.required, Validators.pattern(/^https?:\/\/.+/i)],
+      }),
+      fields: this.buildFieldsArray(embed.fields),
+      footer: this.formBuilder.group({
+        text: new FormControl(embed.footer.text, {
           nonNullable: true,
           validators: [Validators.required],
         }),
-        color: new FormControl(embed.color, {
-          nonNullable: true,
-          validators: [Validators.required, Validators.min(0), Validators.max(16777215)],
-        }),
-        url: new FormControl(embed.url, {
-          nonNullable: true,
-          validators: [Validators.required, Validators.pattern(/^https?:\/\/.+/i)],
-        }),
-        fields: this.buildFieldsArray(embed.fields),
-        footer: this.formBuilder.group({
-          text: new FormControl(embed.footer.text, {
-            nonNullable: true,
-            validators: [Validators.required],
-          }),
-        }),
-        thumbnail: this.formBuilder.group({
-          url: new FormControl(embed.thumbnail.url, { nonNullable: true }),
-        }),
-        image: this.formBuilder.group({
-          url: new FormControl(embed.image.url, { nonNullable: true }),
-        }),
+      }),
+      thumbnail: this.formBuilder.group({
+        url: new FormControl(embed.thumbnail.url, { nonNullable: true }),
+      }),
+      image: this.formBuilder.group({
+        url: new FormControl(embed.image.url, { nonNullable: true }),
       }),
     });
   }
@@ -109,31 +112,82 @@ export class HomeComponent {
       .subscribe(() => {
         this.syncPreview();
       });
-    this.messageTypeControl.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef), takeUntil(this.formRefresh$))
-      .subscribe((messageType) => {
-        this.updateUrlValidators(messageType);
-        this.updateThumbnailState(messageType);
-      });
-    const messageType = this.messageTypeControl.value;
-    this.updateUrlValidators(messageType);
-    this.updateThumbnailState(messageType);
+    this.embedsArray.controls.forEach((control) => {
+      const embedGroup = control as FormGroup;
+      const messageType = this.getMessageTypeControl(embedGroup).value;
+      this.updateUrlValidators(embedGroup, messageType);
+      this.updateThumbnailState(embedGroup, messageType);
+    });
     this.syncPreview();
   }
 
-  get fieldsArray(): FormArray {
-    return this.form.get('embed.fields') as FormArray;
+  get embedsArray(): FormArray {
+    return this.form.get('embeds') as FormArray;
   }
 
-  get messageTypeControl(): FormControl<MessageType | null> {
-    return this.form.get('embed.messageType') as FormControl<MessageType | null>;
+  get hasToken(): boolean {
+    const token = this.form?.get('token')?.value;
+    return typeof token === 'string' && token.trim().length > 0;
   }
 
-  handleMessageTypeSelection(type: MessageType): void {
-    if (this.messageTypeControl.value === type) {
+  isScraping(index: number): boolean {
+    return this.scrapingEmbeds.has(index);
+  }
+
+  getEmbedGroup(index: number): FormGroup {
+    return this.embedsArray.at(index) as FormGroup;
+  }
+
+  getMessageTypeControl(embedGroup: FormGroup): FormControl<MessageType | null> {
+    return embedGroup.get('messageType') as FormControl<MessageType | null>;
+  }
+
+  getFieldsArray(embedGroup: FormGroup): FormArray {
+    return embedGroup.get('fields') as FormArray;
+  }
+
+  getMessageType(index: number): MessageType | null {
+    return this.getMessageTypeControl(this.getEmbedGroup(index)).value;
+  }
+
+  getColorHex(index: number): string {
+    const color = this.getEmbedGroup(index).get('color')?.value as number | null | undefined;
+    return this.toHexColor(color);
+  }
+
+  addEmbed(): void {
+    const baseType = this.getMessageType(0);
+    const embed = baseType ? this.embedFormService.getDefaultsForType(baseType) : this.buildBlankEmbed();
+    this.embedsArray.push(this.buildEmbedGroup(embed));
+    this.updateUrlValidators(this.getEmbedGroup(this.embedsArray.length - 1), baseType);
+    this.updateThumbnailState(this.getEmbedGroup(this.embedsArray.length - 1), baseType);
+    this.expandedEmbedIndex = this.embedsArray.length - 1;
+    this.changeDetectorRef.markForCheck();
+  }
+
+  removeEmbed(index: number): void {
+    if (this.embedsArray.length <= 1) {
       return;
     }
-    if (this.form.dirty) {
+    this.embedsArray.removeAt(index);
+    this.scrapingEmbeds.clear();
+    if (this.expandedEmbedIndex >= this.embedsArray.length) {
+      this.expandedEmbedIndex = Math.max(0, this.embedsArray.length - 1);
+    }
+    this.syncPreview();
+  }
+
+  toggleEmbed(index: number): void {
+    this.expandedEmbedIndex = this.expandedEmbedIndex === index ? -1 : index;
+  }
+
+  handleMessageTypeSelection(index: number, type: MessageType): void {
+    const embedGroup = this.getEmbedGroup(index);
+    const messageTypeControl = this.getMessageTypeControl(embedGroup);
+    if (messageTypeControl.value === type) {
+      return;
+    }
+    if (embedGroup.dirty) {
       const confirmed = window.confirm(
         'Changing the message type will reset the form content. Are you sure?'
       );
@@ -141,15 +195,16 @@ export class HomeComponent {
         return;
       }
     }
-    this.resetFormForType(type);
+    this.resetEmbedForType(index, type);
   }
 
-  handleColorChange(hex: string): void {
-    if (this.messageTypeControl.value !== 'custom') {
+  handleColorChange(index: number, hex: string): void {
+    const embedGroup = this.getEmbedGroup(index);
+    if (this.getMessageTypeControl(embedGroup).value !== 'custom') {
       return;
     }
     const numericColor = this.fromHexColor(hex);
-    const colorControl = this.form.get('embed.color');
+    const colorControl = embedGroup.get('color');
     if (colorControl) {
       colorControl.setValue(numericColor);
     }
@@ -163,9 +218,9 @@ export class HomeComponent {
       return;
     }
 
-    const payload: EmbedRequest = {
-      embed: this.formatEmbedDates(this.form.getRawValue().embed as EmbedConfig),
-    };
+    const embeds = this.getFormattedEmbeds();
+    const payload: EmbedRequest =
+      embeds.length === 1 ? { embed: embeds[0] } : { embeds };
     const token = this.form.getRawValue().token ?? '';
 
     this.isSubmitting = true;
@@ -190,8 +245,9 @@ export class HomeComponent {
       });
   }
 
-  handleAssetStoreScrape(): void {
-    const messageType = this.messageTypeControl.value;
+  handleAssetStoreScrape(index: number): void {
+    const embedGroup = this.getEmbedGroup(index);
+    const messageType = this.getMessageTypeControl(embedGroup).value;
     if (!messageType || messageType === 'custom') {
       this.status = {
         type: 'error',
@@ -200,7 +256,7 @@ export class HomeComponent {
       this.changeDetectorRef.markForCheck();
       return;
     }
-    const url = this.form.get('embed.url')?.value?.trim();
+    const url = embedGroup.get('url')?.value?.trim();
     if (!url || !this.embedFormService.isSupportedAssetListingUrl(url, messageType)) {
       this.status = {
         type: 'error',
@@ -211,7 +267,7 @@ export class HomeComponent {
     }
 
     this.status = null;
-    this.isScraping = true;
+    this.scrapingEmbeds.add(index);
     this.changeDetectorRef.markForCheck();
     const token = this.form.getRawValue().token ?? '';
     this.embedService
@@ -219,7 +275,7 @@ export class HomeComponent {
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => {
-          this.isScraping = false;
+          this.scrapingEmbeds.delete(index);
           this.changeDetectorRef.markForCheck();
         })
       )
@@ -230,7 +286,7 @@ export class HomeComponent {
             this.changeDetectorRef.markForCheck();
             return;
           }
-          this.applyAssetStoreData(url, data);
+          this.applyAssetStoreData(url, data, embedGroup);
         },
         error: (error: Error) => {
           this.status = {
@@ -243,15 +299,14 @@ export class HomeComponent {
   }
 
   handleCopyJson(): void {
-    const messageType = this.messageTypeControl.value;
-    if (!messageType) {
-      this.status = { type: 'error', text: 'Select a message type before copying JSON.' };
+    const embeds = this.getFormattedEmbeds();
+    if (embeds.length === 0) {
+      this.status = { type: 'error', text: 'Add an embed before copying JSON.' };
       this.changeDetectorRef.markForCheck();
       return;
     }
-    const payload: EmbedRequest = {
-      embed: this.formatEmbedDates(this.form.getRawValue().embed as EmbedConfig),
-    };
+    const payload: EmbedRequest =
+      embeds.length === 1 ? { embed: embeds[0] } : { embeds };
     const json = JSON.stringify(payload, null, 2);
     this.copyToClipboard(json)
       .then(() => {
@@ -300,6 +355,51 @@ export class HomeComponent {
       return;
     }
 
+    const embedList = (parsed as Record<string, unknown>)['embeds'];
+    if (Array.isArray(embedList)) {
+      const nextGroups: FormGroup[] = [];
+      const topLevelType = this.parseMessageType((parsed as Record<string, unknown>)['messageType']);
+      for (let index = 0; index < embedList.length; index += 1) {
+        const entry = embedList[index];
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+          this.bulkJsonError = 'Each entry in embeds must be an object.';
+          this.changeDetectorRef.markForCheck();
+          return;
+        }
+        const embedPayload =
+          this.embedFormService.extractEmbedPayloadFromRecord(entry as Record<string, unknown>) ?? {};
+        const fallbackType =
+          embedPayload.messageType ??
+          topLevelType ??
+          this.getMessageType(index) ??
+          this.getMessageType(0);
+        if (!fallbackType) {
+          this.bulkJsonError = 'Each embed needs a messageType to apply bulk updates.';
+          this.changeDetectorRef.markForCheck();
+          return;
+        }
+        const defaults = this.embedFormService.getDefaultsForType(fallbackType);
+        const merged = this.mergeEmbedPayload(defaults, embedPayload);
+        merged.messageType = fallbackType;
+        nextGroups.push(this.buildEmbedGroup(merged));
+      }
+
+      if (nextGroups.length === 0) {
+        this.bulkJsonError = 'Provide at least one embed in the embeds array.';
+        this.changeDetectorRef.markForCheck();
+        return;
+      }
+
+      const tokenValue = this.form.get('token')?.value ?? '';
+      this.form = this.buildForm(nextGroups.map((group) => group.getRawValue() as EmbedConfig), tokenValue);
+      this.scrapingEmbeds.clear();
+      this.connectForm();
+      this.status = { type: 'success', text: 'Bulk updates applied to the embeds.' };
+      this.isBulkModalOpen = false;
+      this.changeDetectorRef.markForCheck();
+      return;
+    }
+
     const payload = this.embedFormService.extractBulkPayload(parsed as Record<string, unknown>);
     const assetPayload = payload.asset;
     const embedPayload = payload.embed;
@@ -310,12 +410,13 @@ export class HomeComponent {
       return;
     }
 
+    const targetEmbed = this.getEmbedGroup(0);
+    const selectedType = this.getMessageTypeControl(targetEmbed).value;
     const incomingType = embedPayload?.messageType ?? assetPayload.messageType ?? null;
-    const selectedType = this.messageTypeControl.value;
     let effectiveType = selectedType;
     if (incomingType) {
       if (incomingType !== selectedType) {
-        if (this.form.dirty) {
+        if (targetEmbed.dirty) {
           const confirmed = window.confirm(
             'Applying this JSON will reset the form content for the new message type. Continue?'
           );
@@ -323,7 +424,7 @@ export class HomeComponent {
             return;
           }
         }
-        this.resetFormForType(incomingType);
+        this.resetEmbedForType(0, incomingType);
       }
       effectiveType = incomingType;
     } else if (!selectedType) {
@@ -333,15 +434,15 @@ export class HomeComponent {
     }
 
     const urlFromPayload = (embedPayload?.url ?? assetPayload.url)?.trim();
-    const currentUrl = this.form.get('embed.url')?.value?.toString().trim() ?? '';
+    const currentUrl = targetEmbed.get('url')?.value?.toString().trim() ?? '';
     if (effectiveType === 'custom') {
       if (urlFromPayload) {
-        this.form.get('embed.url')?.setValue(urlFromPayload);
+        targetEmbed.get('url')?.setValue(urlFromPayload);
       }
       if (embedPayload) {
-        this.applyEmbedPayload(embedPayload);
+        this.applyEmbedPayload(embedPayload, targetEmbed);
       }
-      this.applyAssetPayload(assetPayload, embedPayload);
+      this.applyAssetPayload(assetPayload, embedPayload, targetEmbed);
     } else {
       if (!effectiveType) {
         return;
@@ -354,20 +455,46 @@ export class HomeComponent {
         }
       }
       if (embedPayload) {
-        this.applyEmbedPayload(embedPayload);
+        this.applyEmbedPayload(embedPayload, targetEmbed);
       }
-      this.applyAssetPayload(assetPayload, embedPayload);
+      this.applyAssetPayload(assetPayload, embedPayload, targetEmbed);
     }
-    this.status = { type: 'success', text: 'Bulk updates applied to the form.' };
+    if (currentUrl && urlFromPayload && currentUrl !== urlFromPayload) {
+      targetEmbed.get('url')?.setValue(urlFromPayload);
+    }
+    this.status = { type: 'success', text: 'Bulk updates applied to the first embed.' };
     this.isBulkModalOpen = false;
     this.changeDetectorRef.markForCheck();
   }
 
-  private resetFormForType(type: MessageType): void {
+  private resetEmbedForType(index: number, type: MessageType): void {
     const defaults = this.embedFormService.getDefaultsForType(type);
-    const tokenValue = this.form.get('token')?.value ?? '';
-    this.form = this.buildForm(defaults, tokenValue);
-    this.connectForm();
+    const embedGroup = this.buildEmbedGroup(defaults);
+    this.embedsArray.setControl(index, embedGroup);
+    this.updateUrlValidators(embedGroup, type);
+    this.updateThumbnailState(embedGroup, type);
+    this.syncPreview();
+  }
+
+  private mergeEmbedPayload(base: EmbedConfig, payload: BulkEmbedPayload): EmbedConfig {
+    return {
+      ...base,
+      messageType: payload.messageType ?? base.messageType,
+      title: payload.title ?? base.title,
+      color: payload.color ?? base.color,
+      url: payload.url ?? base.url,
+      fields: payload.fields ?? base.fields,
+      footer: payload.footer ? { text: payload.footer.text ?? base.footer.text } : base.footer,
+      thumbnail: payload.thumbnail ? { url: payload.thumbnail.url ?? base.thumbnail.url } : base.thumbnail,
+      image: payload.image ? { url: payload.image.url ?? base.image.url } : base.image,
+    };
+  }
+
+  private parseMessageType(value: unknown): MessageType | null {
+    if (value === 'unity' || value === 'fab' || value === 'custom') {
+      return value;
+    }
+    return null;
   }
 
   private copyToClipboard(text: string): Promise<void> {
@@ -396,8 +523,8 @@ export class HomeComponent {
     });
   }
 
-  private updateUrlValidators(messageType: MessageType | null): void {
-    const urlControl = this.form.get('embed.url');
+  private updateUrlValidators(embedGroup: FormGroup, messageType: MessageType | null): void {
+    const urlControl = embedGroup.get('url');
     if (!urlControl) {
       return;
     }
@@ -421,8 +548,8 @@ export class HomeComponent {
     };
   }
 
-  private updateThumbnailState(messageType: MessageType | null): void {
-    const thumbnailControl = this.form.get('embed.thumbnail.url');
+  private updateThumbnailState(embedGroup: FormGroup, messageType: MessageType | null): void {
+    const thumbnailControl = embedGroup.get('thumbnail.url');
     if (!thumbnailControl) {
       return;
     }
@@ -441,8 +568,7 @@ export class HomeComponent {
     });
   }
 
-  private applyAssetStoreData(url: string, data: AssetStoreDataWithPromo): void {
-    const embedGroup = this.form.get('embed') as FormGroup;
+  private applyAssetStoreData(url: string, data: AssetStoreDataWithPromo, embedGroup: FormGroup): void {
     if (embedGroup.get('url')?.value !== url) {
       embedGroup.get('url')?.setValue(url);
     }
@@ -452,22 +578,24 @@ export class HomeComponent {
     if (data.imageUrl) {
       embedGroup.get('image.url')?.setValue(data.imageUrl);
     }
-    const messageType = this.messageTypeControl.value;
+    const messageType = this.getMessageTypeControl(embedGroup).value;
     if (messageType) {
       const defaults = this.embedFormService.getDefaultsForType(messageType);
       embedGroup.get('thumbnail.url')?.setValue(defaults.thumbnail.url);
       embedGroup.get('color')?.setValue(defaults.color);
     }
     if (data.price) {
-      this.applyDiscountPrice(data.price);
+      this.applyDiscountPrice(data.price, this.getFieldsArray(embedGroup));
     }
     if (data.promoCode) {
-      this.applyPromoCode(data.promoCode);
+      this.applyPromoCode(data.promoCode, this.getFieldsArray(embedGroup));
     }
   }
 
-  private applyAssetStoreDataWithoutUrl(data: AssetStoreDataWithPromo): void {
-    const embedGroup = this.form.get('embed') as FormGroup;
+  private applyAssetStoreDataWithoutUrl(
+    data: AssetStoreDataWithPromo,
+    embedGroup: FormGroup
+  ): void {
     if (data.title) {
       embedGroup.get('title')?.setValue(data.title);
     }
@@ -475,18 +603,18 @@ export class HomeComponent {
       embedGroup.get('image.url')?.setValue(data.imageUrl);
     }
     if (data.price) {
-      this.applyDiscountPrice(data.price);
+      this.applyDiscountPrice(data.price, this.getFieldsArray(embedGroup));
     }
     if (data.promoCode) {
-      this.applyPromoCode(data.promoCode);
+      this.applyPromoCode(data.promoCode, this.getFieldsArray(embedGroup));
     }
   }
 
   private applyAssetPayload(
     payload: AssetStoreDataWithPromo & { url?: string },
-    embedPayload?: BulkEmbedPayload
+    embedPayload: BulkEmbedPayload | undefined,
+    embedGroup: FormGroup
   ): void {
-    const embedGroup = this.form.get('embed') as FormGroup;
     if (payload.url && embedPayload?.url === undefined) {
       embedGroup.get('url')?.setValue(payload.url);
     }
@@ -497,15 +625,14 @@ export class HomeComponent {
       embedGroup.get('image.url')?.setValue(payload.imageUrl);
     }
     if (payload.price) {
-      this.applyDiscountPrice(payload.price);
+      this.applyDiscountPrice(payload.price, this.getFieldsArray(embedGroup));
     }
     if (payload.promoCode) {
-      this.applyPromoCode(payload.promoCode);
+      this.applyPromoCode(payload.promoCode, this.getFieldsArray(embedGroup));
     }
   }
 
-  private applyEmbedPayload(payload: BulkEmbedPayload): void {
-    const embedGroup = this.form.get('embed') as FormGroup;
+  private applyEmbedPayload(payload: BulkEmbedPayload, embedGroup: FormGroup): void {
     if (payload.title !== undefined) {
       embedGroup.get('title')?.setValue(payload.title);
     }
@@ -516,10 +643,11 @@ export class HomeComponent {
       embedGroup.get('url')?.setValue(payload.url);
     }
     if (payload.fields !== undefined) {
-      this.fieldsArray.clear();
+      const fieldsArray = this.getFieldsArray(embedGroup);
+      fieldsArray.clear();
       payload.fields.forEach((field) => {
         const normalizedValue = this.normalizeDateInputValue(field.name, field.value);
-        this.fieldsArray.push(this.createField(field.name, normalizedValue, field.inline));
+        fieldsArray.push(this.createField(field.name, normalizedValue, field.inline));
       });
     }
     if (payload.footer?.text !== undefined) {
@@ -540,24 +668,24 @@ export class HomeComponent {
     return Boolean(data.title || data.imageUrl || data.price);
   }
 
-  private applyPromoCode(code: string): void {
+  private applyPromoCode(code: string, fieldsArray: FormArray): void {
     const normalized = code.trim();
     if (!normalized) {
       return;
     }
-    const field = this.fieldsArray.controls.find((control) => {
+    const field = fieldsArray.controls.find((control) => {
       const nameValue = control.get('name')?.value?.toString().trim().toLowerCase();
       return nameValue === 'código' || nameValue === 'codigo' || nameValue === 'code';
     });
     field?.get('value')?.setValue(normalized);
   }
 
-  private applyDiscountPrice(price: string): void {
+  private applyDiscountPrice(price: string, fieldsArray: FormArray): void {
     const formatted = this.formatPrice(price);
     if (!formatted) {
       return;
     }
-    const field = this.fieldsArray.controls.find((control) => {
+    const field = fieldsArray.controls.find((control) => {
       return control.get('name')?.value?.toString().trim().toLowerCase() === 'preu';
     });
     field?.get('value')?.setValue(`~~${formatted}~~ GRATIS`);
@@ -593,10 +721,13 @@ export class HomeComponent {
   }
 
   private syncPreview(): void {
-    const rawValue = this.form.getRawValue();
-    this.previewEmbed = this.formatEmbedDates(rawValue.embed as EmbedConfig);
-    this.colorHex = this.toHexColor(this.previewEmbed.color);
+    this.previewEmbeds = this.getFormattedEmbeds();
     this.changeDetectorRef.markForCheck();
+  }
+
+  private getFormattedEmbeds(): EmbedConfig[] {
+    const rawEmbeds = this.embedsArray.getRawValue() as EmbedConfig[];
+    return rawEmbeds.map((embed) => this.formatEmbedDates(embed));
   }
 
   private buildFieldsArray(fields: { name: string; value: string; inline: boolean }[]): FormArray {
