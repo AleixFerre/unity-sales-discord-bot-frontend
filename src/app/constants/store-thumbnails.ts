@@ -1,5 +1,5 @@
 export const UNITY_THUMBNAIL_URL =
-  'https://cdn.discordapp.com/app-icons/1454213455593865428/4564252e658bed263baf2d8e8287beea.png?size=256';
+  'https://yt3.googleusercontent.com/nIKd_1FqVPI6zaMzPnLHMZsg-lDiutyi1ja1VNeOaSaMHvIjwLUJlEpXRdl0LY-BnZ1ttNm8Tg=s900-c-k-c0x00ffffff-no-rj';
 export const FAB_THUMBNAIL_URL =
   'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIxGKI2LmHlk9g-1u7nJLElU-3OyKP75wi5Q&s';
 
