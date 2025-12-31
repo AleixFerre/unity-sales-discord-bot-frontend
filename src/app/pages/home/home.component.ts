@@ -219,8 +219,7 @@ export class HomeComponent {
     }
 
     const embeds = this.getFormattedEmbeds();
-    const payload: EmbedRequest =
-      embeds.length === 1 ? { embed: embeds[0] } : { embeds };
+    const payload: EmbedRequest = { embeds };
     const token = this.form.getRawValue().token ?? '';
 
     this.isSubmitting = true;
@@ -305,8 +304,7 @@ export class HomeComponent {
       this.changeDetectorRef.markForCheck();
       return;
     }
-    const payload: EmbedRequest =
-      embeds.length === 1 ? { embed: embeds[0] } : { embeds };
+    const payload: EmbedRequest = { embeds };
     const json = JSON.stringify(payload, null, 2);
     this.copyToClipboard(json)
       .then(() => {
