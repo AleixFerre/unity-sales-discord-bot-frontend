@@ -62,11 +62,14 @@
 }
 
 .embed__thumbnail {
-  width: 64px;
-  height: 64px;
+  max-width: 64px;
+  max-height: 64px;
+  width: auto;
+  height: auto;
   border-radius: 0.8rem;
-  object-fit: cover;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(8, 12, 20, 0.6);
+  align-self: flex-start;
 }
 
 .embed__fields {
@@ -106,10 +109,10 @@
 
 .embed__image {
   width: 100%;
+  height: auto;
   border-radius: 0.9rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  object-fit: cover;
-  max-height: 220px;
+  background: rgba(8, 12, 20, 0.6);
 }
 
 .embed__footer {
@@ -124,8 +127,8 @@
   }
 
   .embed__thumbnail {
-    width: 56px;
-    height: 56px;
+    max-width: 56px;
+    max-height: 56px;
   }
 
   .embed__fields {

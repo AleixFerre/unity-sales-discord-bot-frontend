@@ -14,6 +14,8 @@ export class EmbedBuilderComponent {
   @Input() colorHex = '#000000';
   @Input() isScraping = false;
   @Input() hasToken = false;
+  @Input() isStoreUrlValid = true;
+  @Input() storeUrlMismatch = false;
   @Input() messageType: MessageType | null = null;
   @Output() colorChange = new EventEmitter<string>();
   @Output() assetStoreScrape = new EventEmitter<void>();

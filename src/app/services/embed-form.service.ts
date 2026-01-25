@@ -195,7 +195,7 @@ export class EmbedFormService {
     try {
       const parsed = new URL(url);
       if (messageType === 'unity') {
-        return parsed.hostname === 'assetstore.unity.com' && parsed.pathname.startsWith('/packages/');
+        return parsed.hostname === 'assetstore.unity.com';
       }
       if (messageType === 'fab') {
         return parsed.hostname === 'www.fab.com' || parsed.hostname === 'fab.com';
@@ -219,6 +219,15 @@ export class EmbedFormService {
         );
       }
       return false;
+    } catch {
+      return false;
+    }
+  }
+
+  isUnityAssetStoreUrl(url: string): boolean {
+    try {
+      const parsed = new URL(url);
+      return parsed.hostname === 'assetstore.unity.com';
     } catch {
       return false;
     }

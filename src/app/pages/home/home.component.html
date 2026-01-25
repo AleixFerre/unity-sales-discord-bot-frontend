@@ -24,68 +24,45 @@
         <h2>Auth</h2>
         <label class="field" [class.error]="form.get('token')?.touched && form.get('token')?.invalid">
           <span>Bearer token</span>
-          <input
-            type="password"
-            formControlName="token"
-            placeholder="••••••••••••••"
-            autocomplete="off"
-          />
+          <input type="password" formControlName="token" placeholder="••••••••••••••" autocomplete="off" />
           @if (form.get('token')?.touched && form.get('token')?.invalid) {
-            <small class="error-text">Token is required.</small>
+          <small class="error-text">Token is required.</small>
           }
         </label>
       </section>
 
       <div class="embed-stack">
         @for (embed of embedsArray.controls; track $index; let i = $index) {
-          <section class="embed-card">
-            <div class="embed-card__header">
-              <button
-                type="button"
-                class="embed-card__toggle"
-                [attr.aria-expanded]="expandedEmbedIndex === i"
-                (click)="toggleEmbed(i)"
-              >
-                <span>Embed {{ i + 1 }}</span>
-                <span class="embed-card__meta">
-                  @if (getMessageType(i)) {
-                    {{ getMessageType(i) }}
-                  } @else {
-                    Unset
-                  }
-                </span>
+        <section class="embed-card">
+          <div class="embed-card__header">
+            <button type="button" class="embed-card__toggle" [attr.aria-expanded]="expandedEmbedIndex === i"
+              (click)="toggleEmbed(i)">
+              <span>Embed {{ i + 1 }}</span>
+              <span class="embed-card__meta">
+                @if (getMessageType(i)) {
+                {{ getMessageType(i) }}
+                } @else {
+                Unset
+                }
+              </span>
+            </button>
+            <div class="embed-card__actions">
+              <button type="button" class="ghost" (click)="toggleEmbed(i)">
+                {{ expandedEmbedIndex === i ? 'Collapse' : 'Expand' }}
               </button>
-              <div class="embed-card__actions">
-                <button
-                  type="button"
-                  class="ghost"
-                  (click)="toggleEmbed(i)"
-                >
-                  {{ expandedEmbedIndex === i ? 'Collapse' : 'Expand' }}
-                </button>
-                <button
-                  type="button"
-                  class="ghost danger"
-                  [disabled]="embedsArray.length === 1"
-                  (click)="removeEmbed(i)"
-                >
-                  Remove embed
-                </button>
-              </div>
+              <button type="button" class="ghost danger" [disabled]="embedsArray.length === 1" (click)="removeEmbed(i)">
+                Remove embed
+              </button>
             </div>
-            @if (expandedEmbedIndex === i) {
-              <app-embed-builder
-                [embedForm]="$any(embed)"
-                [colorHex]="getColorHex(i)"
-                [messageType]="getMessageType(i)"
-                [isScraping]="isScraping(i)"
-                [hasToken]="hasToken"
-                (colorChange)="handleColorChange(i, $event)"
-                (assetStoreScrape)="handleAssetStoreScrape(i)"
-                (messageTypeSelect)="handleMessageTypeSelection(i, $event)"
-              ></app-embed-builder>
-            }
-          </section>
+          </div>
+          @if (expandedEmbedIndex === i) {
+          <app-embed-builder [embedForm]="$any(embed)" [colorHex]="getColorHex(i)" [messageType]="getMessageType(i)"
+            [isScraping]="isScraping(i)" [hasToken]="hasToken" [isStoreUrlValid]="isStoreUrlValid(i)"
+            [storeUrlMismatch]="isStoreUrlMismatch(i)" (colorChange)="handleColorChange(i, $event)"
+            (assetStoreScrape)="handleAssetStoreScrape(i)"
+            (messageTypeSelect)="handleMessageTypeSelection(i, $event)"></app-embed-builder>
+          }
+        </section>
         }
       </div>
     </div>
@@ -93,46 +70,43 @@
     <div class="preview">
       <div class="preview__embeds">
         @for (embed of previewEmbeds; track $index) {
-          <app-embed-preview [embed]="embed"></app-embed-preview>
+        <app-embed-preview [embed]="embed"></app-embed-preview>
         }
       </div>
       <button class="primary" type="submit" [disabled]="form.invalid || isSubmitting">
         {{ isSubmitting ? 'Sending...' : 'Post message' }}
       </button>
       @if (status) {
-        <div class="status" [class.error]="status.type === 'error'">
-          {{ status.text }}
-        </div>
+      <div class="status" [class.error]="status.type === 'error'">
+        {{ status.text }}
+      </div>
       }
     </div>
   </form>
   @if (isBulkModalOpen) {
-    <div class="modal">
-      <div class="modal__backdrop" (click)="closeBulkJsonModal()"></div>
-      <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="bulk-json-title">
-        <div class="modal__header">
-          <h3 id="bulk-json-title">Bulk update from JSON</h3>
-          <p class="modal__hint">
-            Paste a JSON payload (embed, embeds, or top-level fields like title, imageUrl, price,
-            promoCode, url, messageType).
-          </p>
-        </div>
-        <label class="modal__field">
-          <span>JSON payload</span>
-          <textarea
-            class="modal__textarea"
-            [formControl]="bulkJsonControl"
-            placeholder='{"messageType":"unity","title":"New title","imageUrl":"https://...","price":"19.99","promoCode":"SAVE10"}'
-          ></textarea>
-          @if (bulkJsonError) {
-            <small class="error-text">{{ bulkJsonError }}</small>
-          }
-        </label>
-        <div class="modal__actions">
-          <button type="button" class="ghost" (click)="closeBulkJsonModal()">Cancel</button>
-          <button type="button" class="primary" (click)="applyBulkJson()">Apply updates</button>
-        </div>
+  <div class="modal">
+    <div class="modal__backdrop" (click)="closeBulkJsonModal()"></div>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="bulk-json-title">
+      <div class="modal__header">
+        <h3 id="bulk-json-title">Bulk update from JSON</h3>
+        <p class="modal__hint">
+          Paste a JSON payload (embed, embeds, or top-level fields like title, imageUrl, price,
+          promoCode, url, messageType).
+        </p>
+      </div>
+      <label class="modal__field">
+        <span>JSON payload</span>
+        <textarea class="modal__textarea" [formControl]="bulkJsonControl"
+          placeholder='{"messageType":"unity","title":"New title","imageUrl":"https://...","price":"19.99","promoCode":"SAVE10"}'></textarea>
+        @if (bulkJsonError) {
+        <small class="error-text">{{ bulkJsonError }}</small>
+        }
+      </label>
+      <div class="modal__actions">
+        <button type="button" class="ghost" (click)="closeBulkJsonModal()">Cancel</button>
+        <button type="button" class="primary" (click)="applyBulkJson()">Apply updates</button>
       </div>
     </div>
+  </div>
   }
 </div>

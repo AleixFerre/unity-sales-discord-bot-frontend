@@ -55,8 +55,8 @@
           @if (embedGroup.get('url')?.touched && embedGroup.get('url')?.hasError('pattern')) {
             <small class="error-text">Enter a valid URL starting with http:// or https://.</small>
           }
-          @if (embedGroup.get('url')?.touched && embedGroup.get('url')?.hasError('storeMismatch')) {
-            <small class="error-text">URL must be a {{ storeLabel }} URL.</small>
+          @if (storeUrlMismatch) {
+            <small class="error-text">URL must be a {{ storeLabel }} listing URL.</small>
           }
           @if (!hasToken && messageType !== 'custom') {
             <small class="error-text">Bearer token required to fetch.</small>
@@ -67,7 +67,7 @@
                 type="button"
                 class="ghost"
                 (click)="assetStoreScrape.emit()"
-                [disabled]="isScraping || !hasToken"
+                [disabled]="isScraping || !hasToken || !isStoreUrlValid"
               >
                 {{ isScraping ? 'Fetching asset data...' : fetchButtonLabel }}
               </button>
