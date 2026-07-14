@@ -16,6 +16,9 @@
               Copy JSON payload
             </button>
             <button type="button" class="ghost" (click)="addEmbed()">Add embed</button>
+            <button type="button" class="ghost" (click)="handleScrapFabFree()" [disabled]="isScrapingFabFree">
+              {{ isScrapingFabFree ? 'Scraping Fab Free...' : 'Scrap Fab Free' }}
+            </button>
           </div>
         </div>
       </header>

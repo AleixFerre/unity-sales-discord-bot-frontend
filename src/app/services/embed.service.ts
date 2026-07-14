@@ -11,6 +11,14 @@ export type AssetStoreData = {
   price?: string;
 };
 
+export type FabFreeItem = {
+  title?: string;
+  imageUrl?: string;
+  price?: string;
+  freeUntil?: string;
+  url?: string;
+};
+
 @Injectable({ providedIn: 'root' })
 export class EmbedService {
   private readonly backendUrl = config.backendUrl;
@@ -40,6 +48,19 @@ export class EmbedService {
       : new HttpHeaders();
     return this.http.get<AssetStoreData>(this.backendUrl + '/assetstore/scrape', {
       params,
+      headers,
+    });
+  }
+
+  fetchFabFree(token: string): Observable<{ items: FabFreeItem[] }> {
+    if (!this.backendUrl) {
+      return throwError(() => new Error('BACKEND_URL is not configured.'));
+    }
+
+    const headers = token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : new HttpHeaders();
+    return this.http.get<{ items: FabFreeItem[] }>(this.backendUrl + '/fab/free', {
       headers,
     });
   }

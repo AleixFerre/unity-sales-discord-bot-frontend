@@ -21,7 +21,7 @@ import {
   BulkEmbedPayload,
   EmbedFormService,
 } from '../../services/embed-form.service';
-import { AssetStoreData, EmbedService } from '../../services/embed.service';
+import { AssetStoreData, EmbedService, FabFreeItem } from '../../services/embed.service';
 
 type StatusMessage = { type: 'success' | 'error'; text: string } | null;
 
@@ -44,6 +44,7 @@ export class HomeComponent {
   previewEmbeds: EmbedConfig[] = this.getFormattedEmbeds();
   status: StatusMessage = null;
   isSubmitting = false;
+  isScrapingFabFree = false;
   isBulkModalOpen = false;
   bulkJsonControl = new FormControl('', { nonNullable: true });
   bulkJsonError: string | null = null;
@@ -305,6 +306,51 @@ export class HomeComponent {
       });
   }
 
+  handleScrapFabFree(): void {
+    if (!this.hasToken) {
+      this.status = { type: 'error', text: 'Bearer token is required to scrap Fab free items.' };
+      this.changeDetectorRef.markForCheck();
+      return;
+    }
+
+    this.status = null;
+    this.isScrapingFabFree = true;
+    this.changeDetectorRef.markForCheck();
+    const token = this.form.getRawValue().token ?? '';
+    this.embedService
+      .fetchFabFree(token)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => {
+          this.isScrapingFabFree = false;
+          this.changeDetectorRef.markForCheck();
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          const items = response?.items ?? [];
+          if (items.length === 0) {
+            this.status = { type: 'error', text: 'No Fab limited-time-free items found.' };
+            this.changeDetectorRef.markForCheck();
+            return;
+          }
+          this.applyFabFreeItems(items);
+          this.status = {
+            type: 'success',
+            text: `Loaded ${items.length} Fab free ${items.length === 1 ? 'item' : 'items'}.`,
+          };
+          this.changeDetectorRef.markForCheck();
+        },
+        error: (error: Error) => {
+          this.status = {
+            type: 'error',
+            text: error?.message || 'Failed to scrap Fab free items.',
+          };
+          this.changeDetectorRef.markForCheck();
+        },
+      });
+  }
+
   handleCopyJson(): void {
     const embeds = this.getFormattedEmbeds();
     if (embeds.length === 0) {
@@ -428,6 +474,49 @@ export class HomeComponent {
     this.status = { type: 'success', text: 'Bulk updates applied to the first embed.' };
     this.isBulkModalOpen = false;
     this.changeDetectorRef.markForCheck();
+  }
+
+  private applyFabFreeItems(items: FabFreeItem[]): void {
+    const embeds = items.map((item) => this.buildFabFreeEmbed(item));
+    const tokenValue = this.form.get('token')?.value ?? '';
+    this.form = this.buildForm(embeds, tokenValue);
+    this.scrapingEmbeds.clear();
+    this.expandedEmbedIndex = 0;
+    this.connectForm();
+  }
+
+  private buildFabFreeEmbed(item: FabFreeItem): EmbedConfig {
+    const defaults = this.embedFormService.getDefaultsForType('fab');
+    const fields = defaults.fields
+      .filter((field) => !this.isCodeField(field.name))
+      .map((field) => {
+        const name = field.name.trim().toLowerCase();
+        if (name === 'preu' && item.price) {
+          const formatted = this.formatPrice(item.price);
+          return { ...field, value: formatted ? `~~${formatted}~~ GRATIS` : field.value };
+        }
+        if (this.isDateField(field.name) && item.freeUntil) {
+          return { ...field, value: this.normalizeDateInputValue(field.name, item.freeUntil) };
+        }
+        return { ...field };
+      });
+    return {
+      ...defaults,
+      title: item.title ?? defaults.title,
+      url: item.url ?? defaults.url,
+      image: { url: item.imageUrl ?? defaults.image.url },
+      fields,
+    };
+  }
+
+  private isCodeField(name: string): boolean {
+    const normalized = name.trim().toLowerCase();
+    return (
+      normalized === 'codi' ||
+      normalized === 'codigo' ||
+      normalized === 'código' ||
+      normalized === 'code'
+    );
   }
 
   private resetEmbedForType(index: number, type: MessageType): void {
