@@ -1,0 +1,47 @@
+<div class="embed-stack">
+  @if (vms().length === 0) {
+    <p class="empty-hint">No embeds yet. Use “+ Unity”, “+ Fab” or “+ Custom” to add one.</p>
+  }
+  @for (vm of vms(); track vm.group; let i = $index) {
+    <section class="embed-card">
+      <div class="embed-card__header">
+        <button
+          type="button"
+          class="embed-card__toggle"
+          [attr.aria-expanded]="composer.expandedIndex() === i"
+          (click)="composer.toggleEmbed(i)"
+        >
+          <span>Embed {{ i + 1 }}</span>
+          <span class="embed-card__meta">{{ vm.messageType }}</span>
+        </button>
+        <div class="embed-card__actions">
+          <button type="button" class="ghost" (click)="composer.toggleEmbed(i)">
+            {{ composer.expandedIndex() === i ? 'Collapse' : 'Expand' }}
+          </button>
+          <button type="button" class="ghost danger" (click)="composer.removeEmbed(i)">
+            Remove embed
+          </button>
+        </div>
+      </div>
+      <div
+        class="collapsible"
+        [class.open]="composer.expandedIndex() === i"
+        [inert]="composer.expandedIndex() !== i"
+      >
+        <div class="collapsible__inner">
+          <app-embed-builder
+            [embedForm]="vm.group"
+            [messageType]="vm.messageType"
+            [colorHex]="vm.colorHex"
+            [isScraping]="vm.isScraping"
+            [hasToken]="composer.hasToken()"
+            [isStoreUrlValid]="vm.storeUrlValid"
+            [storeUrlMismatch]="vm.storeUrlMismatch"
+            (colorChange)="composer.setEmbedColor(vm.group, $event)"
+            (assetStoreScrape)="composer.scrapeEmbed(vm.group)"
+          />
+        </div>
+      </div>
+    </section>
+  }
+</div>

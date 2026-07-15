@@ -107,12 +107,31 @@
   color: var(--muted);
 }
 
+.embed__images {
+  display: grid;
+  gap: 0.4rem;
+}
+
+/* Discord-style gallery: first image spans the full width, the rest share a row. */
+.embed__images.multi {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.embed__images.multi .embed__image:first-child {
+  grid-column: 1 / -1;
+}
+
 .embed__image {
   width: 100%;
   height: auto;
   border-radius: 0.9rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(8, 12, 20, 0.6);
+}
+
+.embed__images.multi .embed__image {
+  height: 100%;
+  object-fit: cover;
 }
 
 .embed__footer {

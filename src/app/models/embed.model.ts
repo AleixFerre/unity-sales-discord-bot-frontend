@@ -12,19 +12,23 @@ export interface EmbedMedia {
   url: string;
 }
 
+export type MessageType = 'unity' | 'fab' | 'custom';
+
 export interface EmbedConfig {
-  messageType?: MessageType;
+  messageType: MessageType;
   title: string;
   color: number;
   url: string;
   fields: EmbedField[];
   footer: EmbedFooter;
   thumbnail: EmbedMedia;
-  image: EmbedMedia;
+  /** Up to 4 — the backend turns extra images into Discord's same-URL gallery trick. */
+  images: EmbedMedia[];
 }
 
-export type MessageType = 'unity' | 'fab' | 'custom';
+/** What goes over the wire — the backend has no use for messageType. */
+export type EmbedPayload = Omit<EmbedConfig, 'messageType'>;
 
 export interface EmbedRequest {
-  embeds: EmbedConfig[];
+  embeds: EmbedPayload[];
 }

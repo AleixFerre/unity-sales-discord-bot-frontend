@@ -1,187 +1,160 @@
-<div class="builder" [formGroup]="embedForm">
+<div class="builder" [formGroup]="embedForm()">
   <section class="panel">
-    <h2>Message type</h2>
-    <div class="message-types">
-      <button
-        type="button"
-        class="type-button"
-        [class.selected]="messageType === 'unity'"
-        (click)="messageTypeSelect.emit('unity')"
+    <h2>Core content</h2>
+    <div class="grid">
+      <label
+        class="field"
+        [class.error]="embedForm().controls.title.touched && embedForm().controls.title.invalid"
       >
-        Unity
-      </button>
-      <button
-        type="button"
-        class="type-button"
-        [class.selected]="messageType === 'fab'"
-        (click)="messageTypeSelect.emit('fab')"
+        <span>Title</span>
+        <input type="text" formControlName="title" placeholder="Oferta" />
+        @if (embedForm().controls.title.touched && embedForm().controls.title.invalid) {
+          <small class="error-text">Title is required.</small>
+        }
+      </label>
+      <label
+        class="field"
+        [class.error]="embedForm().controls.url.touched && embedForm().controls.url.invalid"
       >
-        Fab
-      </button>
-      <button
-        type="button"
-        class="type-button"
-        [class.selected]="messageType === 'custom'"
-        (click)="messageTypeSelect.emit('custom')"
-      >
-        Custom
-      </button>
+        <span>URL</span>
+        <input type="url" formControlName="url" [placeholder]="urlPlaceholder()" />
+        @if (embedForm().controls.url.touched && embedForm().controls.url.hasError('required')) {
+          <small class="error-text">URL is required.</small>
+        }
+        @if (embedForm().controls.url.touched && embedForm().controls.url.hasError('pattern')) {
+          <small class="error-text">Enter a valid URL starting with http:// or https://.</small>
+        }
+        @if (storeUrlMismatch()) {
+          <small class="error-text">URL must be a {{ storeLabel() }} listing URL.</small>
+        }
+        @if (!hasToken() && !isCustom()) {
+          <small class="error-text">Bearer token required to fetch.</small>
+        }
+        @if (!isCustom()) {
+          <div class="field__actions">
+            <button
+              type="button"
+              class="ghost"
+              (click)="assetStoreScrape.emit()"
+              [disabled]="isScraping() || !hasToken() || !isStoreUrlValid()"
+            >
+              {{ isScraping() ? 'Fetching asset data...' : fetchButtonLabel() }}
+            </button>
+          </div>
+        }
+      </label>
+    </div>
+    <div class="grid">
+      <div class="field">
+        <span>Accent color</span>
+        <div class="color-display">
+          @if (isCustom()) {
+            <button
+              type="button"
+              class="color-swatch"
+              [style.background]="colorHex()"
+              (click)="colorPicker.click()"
+            ></button>
+            <input
+              #colorPicker
+              type="color"
+              class="color-input"
+              [value]="colorHex()"
+              (input)="colorChange.emit($any($event.target).value)"
+            />
+          } @else {
+            <span class="color-swatch" [style.background]="colorHex()"></span>
+          }
+          <span class="color-value">{{ colorHex() }}</span>
+        </div>
+      </div>
     </div>
   </section>
 
-  @if (messageType) {
-    <section class="panel" [formGroup]="embedGroup">
-      <h2>Core content</h2>
-      <div class="grid">
-        <label
-          class="field"
-          [class.error]="embedGroup.get('title')?.touched && embedGroup.get('title')?.invalid"
-        >
-          <span>Title</span>
-          <input type="text" formControlName="title" placeholder="Oferta" />
-          @if (embedGroup.get('title')?.touched && embedGroup.get('title')?.invalid) {
-            <small class="error-text">Title is required.</small>
-          }
-        </label>
-        <label
-          class="field"
-          [class.error]="embedGroup.get('url')?.touched && embedGroup.get('url')?.invalid"
-        >
-          <span>URL</span>
-          <input type="url" formControlName="url" [placeholder]="urlPlaceholder" />
-          @if (embedGroup.get('url')?.touched && embedGroup.get('url')?.hasError('required')) {
-            <small class="error-text">URL is required.</small>
-          }
-          @if (embedGroup.get('url')?.touched && embedGroup.get('url')?.hasError('pattern')) {
-            <small class="error-text">Enter a valid URL starting with http:// or https://.</small>
-          }
-          @if (storeUrlMismatch) {
-            <small class="error-text">URL must be a {{ storeLabel }} listing URL.</small>
-          }
-          @if (!hasToken && messageType !== 'custom') {
-            <small class="error-text">Bearer token required to fetch.</small>
-          }
-          @if (messageType !== 'custom') {
-            <div class="field__actions">
-              <button
-                type="button"
-                class="ghost"
-                (click)="assetStoreScrape.emit()"
-                [disabled]="isScraping || !hasToken || !isStoreUrlValid"
-              >
-                {{ isScraping ? 'Fetching asset data...' : fetchButtonLabel }}
-              </button>
-            </div>
-          }
-        </label>
-      </div>
-      <div class="grid">
-        <div class="field">
-          <span>Accent color</span>
-          <div class="color-display">
-            @if (messageType === 'custom') {
-              <button
-                type="button"
-                class="color-swatch"
-                [style.background]="colorHex"
-                (click)="colorPicker.click()"
-              ></button>
-              <input
-                #colorPicker
-                type="color"
-                class="color-input"
-                [value]="colorHex"
-                (input)="colorChange.emit($any($event.target).value)"
-              />
+  <section class="panel">
+    <div class="panel__heading">
+      <h2>Fields</h2>
+      <button type="button" class="ghost" (click)="addField()">Add field</button>
+    </div>
+    <div class="field-list" formArrayName="fields">
+      @for (field of fieldsArray.controls; track field; let i = $index) {
+        <div class="field-card" [formGroupName]="i">
+          <label class="field">
+            <span>Name</span>
+            <input type="text" formControlName="name" [placeholder]="namePlaceholder(i)" />
+          </label>
+          <label class="field">
+            <span>Value</span>
+            @if (isDateName(field)) {
+              <input type="date" formControlName="value" placeholder="12/01/2026" />
             } @else {
-              <span class="color-swatch" [style.background]="colorHex"></span>
+              <input type="text" formControlName="value" [placeholder]="valuePlaceholder(field)" />
             }
-            <span class="color-value">{{ colorHex }}</span>
-          </div>
-          @if (messageType === 'custom') {
-            <div class="color-picker"></div>
-          }
+          </label>
+          <input type="hidden" formControlName="inline" />
+          <button type="button" class="ghost danger" (click)="removeField(i)">Remove</button>
         </div>
-      </div>
-    </section>
+      }
+    </div>
+  </section>
 
-    <section class="panel" [formGroup]="embedGroup">
-      <div class="panel__heading">
-        <h2>Fields</h2>
-        <button type="button" class="ghost" (click)="addField()">Add field</button>
-      </div>
-      <div class="field-list" formArrayName="fields">
-        @for (field of fieldsArray.controls; track $index; let i = $index) {
-          <div class="field-card" [formGroupName]="i">
-            <label class="field">
-              <span>Name</span>
-              <input
-                type="text"
-                formControlName="name"
-                [placeholder]="i === 0 ? 'Preu' : i === 1 ? 'Fi' : i === 2 ? 'Codi' : 'Field name'"
-              />
-            </label>
-            <label class="field">
-              <span>Value</span>
-              @if (field.get('name')?.value?.toString().trim().toLowerCase() === 'fi') {
-                <input type="date" formControlName="value" placeholder="12/01/2026" />
-              } @else {
-                <input
-                  type="text"
-                  formControlName="value"
-                  [placeholder]="
-                    field.get('name')?.value?.toString().trim().toLowerCase() === 'codi'
-                      ? 'CODEGOESHERE'
-                      : '$19.99'
-                  "
-                />
-              }
-            </label>
-            <input type="hidden" formControlName="inline" />
-            <button type="button" class="ghost danger" (click)="removeField(i)">Remove</button>
-          </div>
-        }
-      </div>
-    </section>
-
-    <section class="panel" [formGroup]="embedGroup">
+  <section class="panel">
+    <div class="panel__heading">
       <h2>Media</h2>
-      <div class="grid">
-        <label class="field" formGroupName="thumbnail">
-          <span>Thumbnail URL</span>
-          <input
-            type="url"
-            formControlName="url"
-            placeholder="https://example.com/thumb.png"
-          />
-          @if (!isCustomThumbnail) {
-            <small class="helper-text">Thumbnail is set by the message type.</small>
-          }
-        </label>
-        <label class="field" formGroupName="image">
-          <span>Image URL</span>
-          <input
-            type="url"
-            formControlName="url"
-            placeholder="https://example.com/banner.png"
-          />
-        </label>
-      </div>
-    </section>
-
-    <section class="panel" [formGroup]="embedGroup">
-      <h2>Footer</h2>
-      <label
-        class="field"
-        formGroupName="footer"
-        [class.error]="embedGroup.get('footer.text')?.touched && embedGroup.get('footer.text')?.invalid"
+      <button
+        type="button"
+        class="ghost"
+        (click)="addImage()"
+        [disabled]="imagesArray.length >= maxImages"
       >
-        <span>Footer text</span>
-        <input type="text" formControlName="text" placeholder="Unity Sales Bot" />
-        @if (embedGroup.get('footer.text')?.touched && embedGroup.get('footer.text')?.invalid) {
-          <small class="error-text">Footer text is required.</small>
+        Add image
+      </button>
+    </div>
+    <div class="grid">
+      <label class="field" formGroupName="thumbnail">
+        <span>Thumbnail URL</span>
+        <input type="url" formControlName="url" placeholder="https://example.com/thumb.png" />
+        @if (!isCustom()) {
+          <small class="helper-text">Thumbnail is set by the message type.</small>
         }
       </label>
-    </section>
-  }
+    </div>
+    <div class="field-list" formArrayName="images">
+      @for (image of imagesArray.controls; track image; let i = $index) {
+        <div class="image-row" [formGroupName]="i">
+          <label class="field">
+            <span>Image URL {{ i + 1 }}</span>
+            <input type="url" formControlName="url" placeholder="https://example.com/banner.png" />
+          </label>
+          <button type="button" class="ghost danger" (click)="removeImage(i)">Remove</button>
+        </div>
+      }
+    </div>
+    @if (imagesArray.length > 1) {
+      <small class="helper-text">
+        Discord shows up to {{ maxImages }} images as a gallery on this embed (requires the embed URL).
+      </small>
+    }
+  </section>
+
+  <section class="panel">
+    <h2>Footer</h2>
+    <label
+      class="field"
+      formGroupName="footer"
+      [class.error]="
+        embedForm().controls.footer.controls.text.touched &&
+        embedForm().controls.footer.controls.text.invalid
+      "
+    >
+      <span>Footer text</span>
+      <input type="text" formControlName="text" placeholder="Unity Sales Bot" />
+      @if (
+        embedForm().controls.footer.controls.text.touched &&
+        embedForm().controls.footer.controls.text.invalid
+      ) {
+        <small class="error-text">Footer text is required.</small>
+      }
+    </label>
+  </section>
 </div>

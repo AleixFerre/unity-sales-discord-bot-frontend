@@ -1,4 +1,4 @@
-<section class="preview" [style.--accent]="accentColor">
+<section class="preview" [style.--accent]="accentColor()">
   <header class="preview__header">
     <p class="eyebrow">Live preview</p>
   </header>
@@ -8,27 +8,27 @@
     <div class="embed__body">
       <div class="embed__top">
         <div>
-          @if (embed.url) {
+          @if (embed().url) {
             <a
               class="embed__title"
-              [href]="embed.url"
+              [href]="embed().url"
               target="_blank"
               rel="noreferrer"
             >
-              {{ embed.title }}
+              {{ embed().title }}
             </a>
           } @else {
-            <p class="embed__title">{{ embed.title }}</p>
+            <p class="embed__title">{{ embed().title }}</p>
           }
         </div>
-        @if (embed.thumbnail.url) {
-          <img class="embed__thumbnail" [src]="embed.thumbnail.url" alt="Thumbnail" />
+        @if (embed().thumbnail.url) {
+          <img class="embed__thumbnail" [src]="embed().thumbnail.url" alt="Thumbnail" />
         }
       </div>
 
-      @if (embed.fields.length) {
+      @if (embed().fields.length) {
         <div class="embed__fields">
-          @for (field of embed.fields; track $index) {
+          @for (field of embed().fields; track $index) {
             <div class="embed__field" [class.inline]="field.inline">
               <p class="field__name">{{ field.name }}</p>
               <p class="field__value" [innerHTML]="formatFieldValue(field.value)"></p>
@@ -37,13 +37,17 @@
         </div>
       }
 
-      @if (embed.image.url) {
-        <img class="embed__image" [src]="embed.image.url" alt="Banner image" />
+      @if (imageUrls().length) {
+        <div class="embed__images" [class.multi]="imageUrls().length > 1">
+          @for (url of imageUrls(); track $index) {
+            <img class="embed__image" [src]="url" alt="Embed image" />
+          }
+        </div>
       }
 
-      @if (embed.footer.text) {
+      @if (embed().footer.text) {
         <footer class="embed__footer">
-          <span>{{ embed.footer.text }}</span>
+          <span>{{ embed().footer.text }}</span>
         </footer>
       }
     </div>

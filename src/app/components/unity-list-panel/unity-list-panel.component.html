@@ -1,0 +1,22 @@
+<section class="panel">
+  <div class="panel__heading">
+    <h2>Unity list</h2>
+    <button type="button" class="ghost" [disabled]="!composer.hasToken()" (click)="submit()">
+      Fetch list
+    </button>
+  </div>
+  <label class="field">
+    <span>Asset Store list URL</span>
+    <input
+      type="url"
+      [formControl]="urlControl"
+      placeholder="https://assetstore.unity.com/lists/..."
+    />
+  </label>
+  @if (!composer.hasToken()) {
+    <small class="error-text">Bearer token required to fetch.</small>
+  }
+  <p class="helper-text">
+    Creates one Unity embed with the list title and the first three item images.
+  </p>
+</section>

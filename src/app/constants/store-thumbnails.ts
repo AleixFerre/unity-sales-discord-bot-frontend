@@ -5,33 +5,3 @@ export const FAB_THUMBNAIL_URL =
 
 export const UNITY_ACCENT_COLOR = 0xffffff;
 export const FAB_ACCENT_COLOR = 0x8a2be2;
-
-export const getStoreThumbnailUrl = (rawUrl: string): string | null => {
-  try {
-    const parsed = new URL(rawUrl);
-    if (parsed.hostname === 'assetstore.unity.com') {
-      return UNITY_THUMBNAIL_URL;
-    }
-    if (parsed.hostname === 'www.fab.com' || parsed.hostname === 'fab.com') {
-      return FAB_THUMBNAIL_URL;
-    }
-  } catch {
-    return null;
-  }
-  return null;
-};
-
-export const getStoreAccentColor = (rawUrl: string): number | null => {
-  try {
-    const parsed = new URL(rawUrl);
-    if (parsed.hostname === 'assetstore.unity.com') {
-      return UNITY_ACCENT_COLOR;
-    }
-    if (parsed.hostname === 'www.fab.com' || parsed.hostname === 'fab.com') {
-      return FAB_ACCENT_COLOR;
-    }
-  } catch {
-    return null;
-  }
-  return null;
-};

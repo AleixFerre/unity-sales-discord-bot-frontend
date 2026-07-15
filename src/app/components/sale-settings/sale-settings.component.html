@@ -1,0 +1,23 @@
+<section class="panel">
+  <div class="panel__heading">
+    <h2>Sale settings</h2>
+    <button
+      type="button"
+      class="ghost"
+      [disabled]="!endDateControl.value.trim() && !promoCodeControl.value.trim()"
+      (click)="apply()"
+    >
+      Apply to all Unity embeds
+    </button>
+  </div>
+  <div class="grid">
+    <label class="field">
+      <span>Fi</span>
+      <input type="date" [formControl]="endDateControl" />
+    </label>
+    <label class="field">
+      <span>Codi</span>
+      <input type="text" [formControl]="promoCodeControl" placeholder="CODEGOESHERE" />
+    </label>
+  </div>
+</section>
