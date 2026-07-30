@@ -79,9 +79,7 @@ export class EmbedComposerService {
       nonNullable: true,
       validators: [Validators.required],
     }),
-    embeds: new FormArray<EmbedFormGroup>([
-      this.buildEmbedGroup(this.embedFormService.getDefaultsForType('unity')),
-    ]),
+    embeds: new FormArray<EmbedFormGroup>([]),
   });
 
   readonly formSnapshot = toSignal(this.form.valueChanges.pipe(map(() => this.snapshot())), {
@@ -90,6 +88,10 @@ export class EmbedComposerService {
 
   readonly previewEmbeds = computed(() => this.formSnapshot().embeds.map(formatEmbedForPreview));
   readonly hasToken = computed(() => this.formSnapshot().token.trim().length > 0);
+  /** Sale settings only apply to Unity embeds, so the panel hides when there are none. */
+  readonly hasUnityEmbeds = computed(() =>
+    this.formSnapshot().embeds.some((embed) => embed.messageType === 'unity')
+  );
 
   private readonly formValid = toSignal(
     this.form.statusChanges.pipe(map((status) => status === 'VALID')),
@@ -99,7 +101,7 @@ export class EmbedComposerService {
   readonly isSubmitting = signal(false);
   readonly isScrapingFabFree = signal(false);
   /** Index of the expanded embed card; -1 means all collapsed. */
-  readonly expandedIndex = signal(0);
+  readonly expandedIndex = signal(-1);
   readonly listPanelOpen = signal(false);
 
   private readonly scrapingGroupsState = signal<ReadonlySet<EmbedFormGroup>>(new Set());
@@ -246,7 +248,7 @@ export class EmbedComposerService {
       this.toast.error('Bearer token is required to scrap Fab free items.');
       return;
     }
-    const wouldDiscardWork = this.embedsArray.dirty || this.embedsArray.length > 1;
+    const wouldDiscardWork = this.embedsArray.length > 0;
     if (
       wouldDiscardWork &&
       !window.confirm('This will replace all current embeds with the Fab free items. Continue?')

@@ -37,16 +37,23 @@
         </div>
       </div>
 
-      <app-sale-settings />
+      @if (composer.hasUnityEmbeds()) {
+        <app-sale-settings />
+      }
       <app-embed-list />
     </div>
 
     <div class="preview">
-      <div class="preview__embeds">
-        @for (embed of composer.previewEmbeds(); track $index) {
-          <app-embed-preview [embed]="embed" />
-        }
-      </div>
+      <section class="preview__panel">
+        <p class="eyebrow">Live preview</p>
+        <div class="preview__embeds">
+          @for (embed of composer.previewEmbeds(); track $index) {
+            <app-embed-preview [embed]="embed" />
+          } @empty {
+            <p class="helper-text">No embeds yet — add one to see it here.</p>
+          }
+        </div>
+      </section>
       <button class="primary" type="submit" [disabled]="!composer.canSubmit()">
         {{ composer.isSubmitting() ? 'Sending...' : 'Post message' }}
       </button>

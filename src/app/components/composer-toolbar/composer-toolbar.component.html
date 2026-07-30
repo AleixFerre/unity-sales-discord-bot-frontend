@@ -1,16 +1,23 @@
 <div class="toolbar">
-  <button type="button" class="ghost" (click)="composer.addEmbed('unity')">+ Unity</button>
-  <button type="button" class="ghost" (click)="composer.addEmbed('fab')">+ Fab</button>
-  <button type="button" class="ghost" (click)="composer.addEmbed('custom')">+ Custom</button>
-  <button type="button" class="ghost" (click)="composer.toggleListPanel()">
-    {{ composer.listPanelOpen() ? 'Hide Unity list' : 'Scrap Unity list' }}
-  </button>
-  <button
-    type="button"
-    class="ghost"
-    (click)="composer.scrapFabFree()"
-    [disabled]="composer.isScrapingFabFree()"
-  >
-    {{ composer.isScrapingFabFree() ? 'Scraping Fab Free...' : 'Scrap Fab Free' }}
-  </button>
+  <div class="toolbar__row">
+    <button type="button" class="ghost" (click)="composer.addEmbed('unity')">+ Unity</button>
+    <button type="button" class="ghost" (click)="composer.addEmbed('fab')">+ Fab</button>
+    <button type="button" class="ghost" (click)="composer.addEmbed('custom')">+ Custom</button>
+  </div>
+
+  <div class="toolbar__row">
+    <button type="button" class="ghost scrape" (click)="composer.toggleListPanel()">
+      <img class="scrape__icon" [src]="unityIconUrl" alt="" />
+      <span>{{ composer.listPanelOpen() ? 'Hide Unity list' : 'Scrap Unity list' }}</span>
+    </button>
+    <button
+      type="button"
+      class="ghost scrape"
+      (click)="composer.scrapFabFree()"
+      [disabled]="composer.isScrapingFabFree()"
+    >
+      <img class="scrape__icon" [src]="fabIconUrl" alt="" />
+      <span>{{ composer.isScrapingFabFree() ? 'Scraping Fab Free...' : 'Scrap Fab Free' }}</span>
+    </button>
+  </div>
 </div>
