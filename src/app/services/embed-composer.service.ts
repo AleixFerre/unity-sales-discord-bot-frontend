@@ -22,8 +22,8 @@ import {
 } from '../utils/embed-format';
 import { EmbedFormService } from './embed-form.service';
 import { AssetStoreData, AssetStoreListData, EmbedService, FabFreeItem } from './embed.service';
+import { ToastService } from './toast.service';
 
-export type StatusMessage = { type: 'success' | 'error'; text: string };
 export type SaleSettings = { endDate: string; promoCode: string };
 
 export type FieldFormGroup = FormGroup<{
@@ -72,6 +72,7 @@ export class EmbedComposerService {
   private readonly destroyRef = inject(DestroyRef);
   private readonly embedService = inject(EmbedService);
   private readonly embedFormService = inject(EmbedFormService);
+  private readonly toast = inject(ToastService);
 
   readonly form: ComposerForm = new FormGroup({
     token: new FormControl(this.readStoredToken(), {
@@ -95,7 +96,6 @@ export class EmbedComposerService {
     { initialValue: this.form.valid }
   );
 
-  readonly status = signal<StatusMessage | null>(null);
   readonly isSubmitting = signal(false);
   readonly isScrapingFabFree = signal(false);
   /** Index of the expanded embed card; -1 means all collapsed. */
@@ -151,9 +151,8 @@ export class EmbedComposerService {
   }
 
   send(): void {
-    this.status.set(null);
     if (this.form.invalid || this.embedsArray.length === 0) {
-      this.status.set({ type: 'error', text: 'Please fix the missing fields before sending.' });
+      this.toast.error('Please fix the missing fields before sending.');
       return;
     }
     const embeds: EmbedPayload[] = this.embedsArray.getRawValue().map((embed) => {
@@ -172,9 +171,8 @@ export class EmbedComposerService {
         finalize(() => this.isSubmitting.set(false))
       )
       .subscribe({
-        next: () => this.status.set({ type: 'success', text: 'Embed delivered to the backend.' }),
-        error: (error: Error) =>
-          this.status.set({ type: 'error', text: error?.message || 'Failed to send the embed.' }),
+        next: () => this.toast.success('Embed delivered to the backend.'),
+        error: (error: Error) => this.toast.error(error?.message || 'Failed to send the embed.'),
       });
   }
 
@@ -186,26 +184,21 @@ export class EmbedComposerService {
     const url = group.controls.url.value.trim();
     if (messageType === 'unity' && this.embedFormService.isUnityListUrl(url)) {
       if (!this.hasToken()) {
-        this.status.set({ type: 'error', text: 'Bearer token is required to fetch listing data.' });
+        this.toast.error('Bearer token is required to fetch listing data.');
         return;
       }
-      this.status.set(null);
       this.fetchListInto(group, url);
       return;
     }
     if (!url || !this.embedFormService.isSupportedAssetListingUrl(url, messageType)) {
-      this.status.set({
-        type: 'error',
-        text: 'Enter a valid Unity Asset Store or Fab listing URL before fetching.',
-      });
+      this.toast.error('Enter a valid Unity Asset Store or Fab listing URL before fetching.');
       return;
     }
     if (!this.hasToken()) {
-      this.status.set({ type: 'error', text: 'Bearer token is required to fetch listing data.' });
+      this.toast.error('Bearer token is required to fetch listing data.');
       return;
     }
 
-    this.status.set(null);
     this.markScraping(group, true);
     this.embedService
       .fetchAssetStoreData(url, this.form.controls.token.value)
@@ -219,13 +212,12 @@ export class EmbedComposerService {
             return;
           }
           if (!this.hasAssetStoreData(data)) {
-            this.status.set({ type: 'error', text: 'No data found for this store listing URL.' });
+            this.toast.error('No data found for this store listing URL.');
             return;
           }
           this.applyAssetStoreData(url, data, group);
         },
-        error: (error: Error) =>
-          this.status.set({ type: 'error', text: error?.message || 'Failed to fetch store data.' }),
+        error: (error: Error) => this.toast.error(error?.message || 'Failed to fetch store data.'),
       });
   }
 
@@ -233,14 +225,11 @@ export class EmbedComposerService {
   scrapeUnityList(rawUrl: string): boolean {
     const url = rawUrl.trim();
     if (!url || !this.embedFormService.isUnityListUrl(url)) {
-      this.status.set({
-        type: 'error',
-        text: 'Enter a valid Unity Asset Store list URL (assetstore.unity.com/lists/...).',
-      });
+      this.toast.error('Enter a valid Unity Asset Store list URL (assetstore.unity.com/lists/...).');
       return false;
     }
     if (!this.hasToken()) {
-      this.status.set({ type: 'error', text: 'Bearer token is required to fetch list data.' });
+      this.toast.error('Bearer token is required to fetch list data.');
       return false;
     }
 
@@ -248,14 +237,13 @@ export class EmbedComposerService {
     const group = this.buildEmbedGroup({ ...defaults, fields: [], url });
     this.embedsArray.push(group);
     this.expandedIndex.set(this.embedsArray.length - 1);
-    this.status.set(null);
     this.fetchListInto(group, url);
     return true;
   }
 
   scrapFabFree(): void {
     if (!this.hasToken()) {
-      this.status.set({ type: 'error', text: 'Bearer token is required to scrap Fab free items.' });
+      this.toast.error('Bearer token is required to scrap Fab free items.');
       return;
     }
     const wouldDiscardWork = this.embedsArray.dirty || this.embedsArray.length > 1;
@@ -266,7 +254,6 @@ export class EmbedComposerService {
       return;
     }
 
-    this.status.set(null);
     this.isScrapingFabFree.set(true);
     this.embedService
       .fetchFabFree(this.form.controls.token.value)
@@ -278,20 +265,16 @@ export class EmbedComposerService {
         next: (response) => {
           const items = response?.items ?? [];
           if (items.length === 0) {
-            this.status.set({ type: 'error', text: 'No Fab limited-time-free items found.' });
+            this.toast.error('No Fab limited-time-free items found.');
             return;
           }
           this.replaceAllEmbeds(items.map((item) => this.buildFabFreeEmbed(item)));
-          this.status.set({
-            type: 'success',
-            text: `Loaded ${items.length} Fab free ${items.length === 1 ? 'item' : 'items'}.`,
-          });
+          this.toast.success(
+            `Loaded ${items.length} Fab free ${items.length === 1 ? 'item' : 'items'}.`
+          );
         },
         error: (error: Error) =>
-          this.status.set({
-            type: 'error',
-            text: error?.message || 'Failed to scrap Fab free items.',
-          }),
+          this.toast.error(error?.message || 'Failed to scrap Fab free items.'),
       });
   }
 
@@ -324,14 +307,11 @@ export class EmbedComposerService {
         updated += 1;
       }
     });
-    this.status.set(
-      updated > 0
-        ? {
-            type: 'success',
-            text: `Applied sale settings to ${updated} Unity embed${updated === 1 ? '' : 's'}.`,
-          }
-        : { type: 'error', text: 'No Unity embeds with Fi/Codi fields to update.' }
-    );
+    if (updated > 0) {
+      this.toast.success(`Applied sale settings to ${updated} Unity embed${updated === 1 ? '' : 's'}.`);
+    } else {
+      this.toast.error('No Unity embeds with Fi/Codi fields to update.');
+    }
   }
 
   private fetchListInto(group: EmbedFormGroup, url: string): void {
@@ -351,10 +331,7 @@ export class EmbedComposerService {
             .filter((imageUrl) => Boolean(imageUrl))
             .slice(0, LIST_IMAGE_COUNT);
           if (!data?.title && imageUrls.length === 0) {
-            this.status.set({
-              type: 'error',
-              text: 'No data found for this Asset Store list URL.',
-            });
+            this.toast.error('No data found for this Asset Store list URL.');
             return;
           }
           if (data.title) {
@@ -365,10 +342,7 @@ export class EmbedComposerService {
           }
         },
         error: (error: Error) =>
-          this.status.set({
-            type: 'error',
-            text: error?.message || 'Failed to fetch the Asset Store list.',
-          }),
+          this.toast.error(error?.message || 'Failed to fetch the Asset Store list.'),
       });
   }
 

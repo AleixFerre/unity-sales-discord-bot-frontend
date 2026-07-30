@@ -1,0 +1,13 @@
+<div class="toasts" aria-live="polite">
+  @for (toast of toasts.toasts(); track toast.id) {
+    <button
+      type="button"
+      class="toast"
+      [class.error]="toast.type === 'error'"
+      title="Dismiss"
+      (click)="toasts.dismiss(toast.id)"
+    >
+      {{ toast.text }}
+    </button>
+  }
+</div>

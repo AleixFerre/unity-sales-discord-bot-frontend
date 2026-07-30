@@ -50,11 +50,6 @@
       <button class="primary" type="submit" [disabled]="!composer.canSubmit()">
         {{ composer.isSubmitting() ? 'Sending...' : 'Post message' }}
       </button>
-      @if (composer.status(); as status) {
-        <div class="status" [class.error]="status.type === 'error'">
-          {{ status.text }}
-        </div>
-      }
     </div>
   </form>
 </div>
