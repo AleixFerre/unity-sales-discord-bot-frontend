@@ -32,6 +32,14 @@
   align-items: flex-start;
 }
 
+.embed__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
 .embed__heading {
   min-width: 0;
 }

@@ -2,35 +2,38 @@
   <div class="embed__bar"></div>
   <div class="embed__body">
     <div class="embed__top">
-      <div class="embed__heading">
-        @if (embed().url) {
-          <a
-            class="embed__title"
-            [href]="embed().url"
-            target="_blank"
-            rel="noreferrer"
-          >
-            {{ embed().title }}
-          </a>
-        } @else {
-          <p class="embed__title">{{ embed().title }}</p>
+      <div class="embed__main">
+        <div class="embed__heading">
+          @if (embed().url) {
+            <a
+              class="embed__title"
+              [href]="embed().url"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {{ embed().title }}
+            </a>
+          } @else {
+            <p class="embed__title">{{ embed().title }}</p>
+          }
+        </div>
+
+        @if (embed().fields.length) {
+          <div class="embed__fields">
+            @for (field of embed().fields; track $index) {
+              <div class="embed__field" [class.inline]="field.inline">
+                <p class="field__name">{{ field.name }}</p>
+                <p class="field__value" [innerHTML]="formatFieldValue(field.value)"></p>
+              </div>
+            }
+          </div>
         }
       </div>
+
       @if (embed().thumbnail.url) {
         <img class="embed__thumbnail" [src]="embed().thumbnail.url" alt="Thumbnail" />
       }
     </div>
-
-    @if (embed().fields.length) {
-      <div class="embed__fields">
-        @for (field of embed().fields; track $index) {
-          <div class="embed__field" [class.inline]="field.inline">
-            <p class="field__name">{{ field.name }}</p>
-            <p class="field__value" [innerHTML]="formatFieldValue(field.value)"></p>
-          </div>
-        }
-      </div>
-    }
 
     @if (imageUrls().length) {
       <div class="embed__images" [class.multi]="imageUrls().length > 1">
