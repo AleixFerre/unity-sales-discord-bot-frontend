@@ -16,6 +16,8 @@ export type AssetStoreListData = {
   title?: string;
   author?: string;
   imageUrls?: string[];
+  /** The item images merged into one image by the backend, ready for the first media slot. */
+  collageUrl?: string;
 };
 
 export type FabFreeItem = {

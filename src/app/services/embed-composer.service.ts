@@ -331,9 +331,13 @@ export class EmbedComposerService {
           if (!this.embedsArray.controls.includes(group)) {
             return;
           }
-          const imageUrls = (data?.imageUrls ?? [])
-            .filter((imageUrl) => Boolean(imageUrl))
-            .slice(0, LIST_IMAGE_COUNT);
+          // The backend merges the item images into one collage; the raw URLs are only
+          // used when it could not build one.
+          const imageUrls = data?.collageUrl
+            ? [data.collageUrl]
+            : (data?.imageUrls ?? [])
+                .filter((imageUrl) => Boolean(imageUrl))
+                .slice(0, LIST_IMAGE_COUNT);
           if (!data?.title && imageUrls.length === 0) {
             this.toast.error('No data found for this Asset Store list URL.');
             return;
