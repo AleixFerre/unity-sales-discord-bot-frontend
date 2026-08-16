@@ -61,6 +61,20 @@ p.embed__title {
   color: var(--text);
 }
 
+.embed__description {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #dbdee1;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+:host ::ng-deep .embed__description .strike {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
 .embed__thumbnail {
   max-width: 56px;
   max-height: 56px;

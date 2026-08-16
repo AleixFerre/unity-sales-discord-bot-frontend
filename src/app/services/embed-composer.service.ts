@@ -39,6 +39,7 @@ export type MediaFormGroup = FormGroup<{
 export type EmbedFormGroup = FormGroup<{
   messageType: FormControl<MessageType>;
   title: FormControl<string>;
+  description: FormControl<string>;
   color: FormControl<number>;
   url: FormControl<string>;
   fields: FormArray<FieldFormGroup>;
@@ -161,6 +162,7 @@ export class EmbedComposerService {
       const { messageType, ...payload } = formatEmbedForPreview(embed);
       return {
         ...payload,
+        description: payload.description.trim(),
         images: payload.images.filter((image) => image.url.trim().length > 0),
       };
     });
@@ -371,6 +373,7 @@ export class EmbedComposerService {
         nonNullable: true,
         validators: isCustom ? [] : [Validators.required],
       }),
+      description: new FormControl(config.description, { nonNullable: true }),
       color: new FormControl(config.color, {
         nonNullable: true,
         validators: isCustom

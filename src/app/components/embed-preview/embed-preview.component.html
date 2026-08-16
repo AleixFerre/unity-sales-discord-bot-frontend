@@ -18,12 +18,16 @@
           }
         </div>
 
+        @if (embed().description.trim()) {
+          <p class="embed__description" [innerHTML]="formatText(embed().description)"></p>
+        }
+
         @if (embed().fields.length) {
           <div class="embed__fields">
             @for (field of embed().fields; track $index) {
               <div class="embed__field" [class.inline]="field.inline">
                 <p class="field__name">{{ field.name }}</p>
-                <p class="field__value" [innerHTML]="formatFieldValue(field.value)"></p>
+                <p class="field__value" [innerHTML]="formatText(field.value)"></p>
               </div>
             }
           </div>

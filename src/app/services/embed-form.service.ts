@@ -21,6 +21,7 @@ export class EmbedFormService {
     const base: EmbedConfig = {
       messageType: type,
       title: '',
+      description: '',
       color: 0,
       url: '',
       fields: DEFAULT_FIELDS.map((field) => ({ ...field })),

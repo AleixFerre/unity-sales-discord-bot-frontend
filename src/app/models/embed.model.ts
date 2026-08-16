@@ -17,6 +17,7 @@ export type MessageType = 'unity' | 'fab' | 'custom';
 export interface EmbedConfig {
   messageType: MessageType;
   title: string;
+  description: string;
   color: number;
   url: string;
   fields: EmbedField[];

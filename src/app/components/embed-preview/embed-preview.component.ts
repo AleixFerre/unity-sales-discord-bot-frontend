@@ -19,7 +19,7 @@ export class EmbedPreviewComponent {
       .filter((url) => url.length > 0)
   );
 
-  protected formatFieldValue(value: string | null | undefined): string {
+  protected formatText(value: string | null | undefined): string {
     return formatFieldValueHtml(value);
   }
 }
