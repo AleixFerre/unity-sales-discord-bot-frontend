@@ -63,6 +63,8 @@ const TOKEN_STORAGE_KEY = 'unity-sales-bot.token';
 /** Discord shows at most 4 images per embed gallery. */
 export const MAX_EMBED_IMAGES = 4;
 const LIST_IMAGE_COUNT = MAX_EMBED_IMAGES;
+const LIST_AUTHOR_FIELD = 'Autor';
+const LIST_COUNT_FIELD = 'Assets';
 
 /**
  * Page-scoped store for the embed composer: owns the one form instance,
@@ -345,9 +347,7 @@ export class EmbedComposerService {
           if (data.title) {
             group.controls.title.setValue(data.title);
           }
-          if (data.author) {
-            group.controls.description.setValue(`by ${data.author}`);
-          }
+          this.setListFields(group, data);
           if (imageUrls.length > 0) {
             this.setImages(group, imageUrls);
           }
@@ -416,6 +416,26 @@ export class EmbedComposerService {
     return new FormGroup({
       url: new FormControl(url, { nonNullable: true }),
     });
+  }
+
+  // Discord sizes the embed header to the taller of its text and its 80px thumbnail,
+  // so a list's metadata goes in fields instead of the description: two field rows
+  // fill that height and close the gap that used to sit above the collage.
+  private setListFields(group: EmbedFormGroup, data: AssetStoreListData): void {
+    const fields: EmbedField[] = [];
+    if (data.author) {
+      fields.push({ name: LIST_AUTHOR_FIELD, value: data.author, inline: true });
+    }
+    if (data.itemCount) {
+      fields.push({ name: LIST_COUNT_FIELD, value: String(data.itemCount), inline: true });
+    }
+    if (fields.length === 0) {
+      return;
+    }
+    const control = group.controls.fields;
+    control.clear({ emitEvent: false });
+    fields.forEach((field) => control.push(this.buildFieldGroup(field), { emitEvent: false }));
+    control.updateValueAndValidity();
   }
 
   private setImages(group: EmbedFormGroup, urls: string[]): void {

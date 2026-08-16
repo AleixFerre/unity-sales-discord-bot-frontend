@@ -15,6 +15,8 @@ export type AssetStoreData = {
 export type AssetStoreListData = {
   title?: string;
   author?: string;
+  /** Every item on the list page, not just the ones that made it into the collage. */
+  itemCount?: number;
   imageUrls?: string[];
   /** The item images merged into one image by the backend, ready for the first media slot. */
   collageUrl?: string;
