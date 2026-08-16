@@ -1,8 +1,13 @@
 <section class="panel">
   <div class="panel__heading">
     <h2>Unity list</h2>
-    <button type="button" class="ghost" [disabled]="!composer.hasToken()" (click)="submit()">
-      Fetch list
+    <button
+      type="button"
+      class="ghost"
+      [disabled]="!composer.hasToken() || composer.isScrapingList()"
+      (click)="submit()"
+    >
+      {{ composer.isScrapingList() ? 'Fetching list...' : 'Fetch list' }}
     </button>
   </div>
   <label class="field">

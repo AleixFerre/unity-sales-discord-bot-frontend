@@ -103,6 +103,7 @@ export class EmbedComposerService {
 
   readonly isSubmitting = signal(false);
   readonly isScrapingFabFree = signal(false);
+  readonly isScrapingList = signal(false);
   /** Index of the expanded embed card; -1 means all collapsed. */
   readonly expandedIndex = signal(-1);
   readonly listPanelOpen = signal(false);
@@ -227,7 +228,10 @@ export class EmbedComposerService {
       });
   }
 
-  /** Creates one Unity embed for an Asset Store list page and fetches its title, author and item images. */
+  /**
+   * Fetches an Asset Store list page and only then appends the Unity embed, so the
+   * card never shows up blank while the scrape is in flight.
+   */
   scrapeUnityList(rawUrl: string): boolean {
     const url = rawUrl.trim();
     if (!url || !this.embedFormService.isUnityListUrl(url)) {
@@ -238,12 +242,29 @@ export class EmbedComposerService {
       this.toast.error('Bearer token is required to fetch list data.');
       return false;
     }
+    if (this.isScrapingList()) {
+      return false;
+    }
 
-    const defaults = this.embedFormService.getDefaultsForType('unity');
-    const group = this.buildEmbedGroup({ ...defaults, fields: [], url });
-    this.embedsArray.push(group);
-    this.expandedIndex.set(this.embedsArray.length - 1);
-    this.fetchListInto(group, url);
+    this.isScrapingList.set(true);
+    this.embedService
+      .fetchAssetStoreList(url, this.form.controls.token.value)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.isScrapingList.set(false))
+      )
+      .subscribe({
+        next: (data: AssetStoreListData) => {
+          const imageUrls = this.listImageUrls(data);
+          if (!data?.title && imageUrls.length === 0) {
+            this.toast.error('No data found for this Asset Store list URL.');
+            return;
+          }
+          this.addListEmbed(url, data, imageUrls);
+        },
+        error: (error: Error) =>
+          this.toast.error(error?.message || 'Failed to fetch the Asset Store list.'),
+      });
     return true;
   }
 
@@ -333,13 +354,7 @@ export class EmbedComposerService {
           if (!this.embedsArray.controls.includes(group)) {
             return;
           }
-          // The backend merges the item images into one collage; the raw URLs are only
-          // used when it could not build one.
-          const imageUrls = data?.collageUrl
-            ? [data.collageUrl]
-            : (data?.imageUrls ?? [])
-                .filter((imageUrl) => Boolean(imageUrl))
-                .slice(0, LIST_IMAGE_COUNT);
+          const imageUrls = this.listImageUrls(data);
           if (!data?.title && imageUrls.length === 0) {
             this.toast.error('No data found for this Asset Store list URL.');
             return;
@@ -355,6 +370,40 @@ export class EmbedComposerService {
         error: (error: Error) =>
           this.toast.error(error?.message || 'Failed to fetch the Asset Store list.'),
       });
+  }
+
+  private addListEmbed(url: string, data: AssetStoreListData, imageUrls: string[]): void {
+    const defaults = this.embedFormService.getDefaultsForType('unity');
+    this.embedsArray.push(
+      this.buildEmbedGroup({
+        ...defaults,
+        url,
+        title: data.title ?? defaults.title,
+        fields: this.buildListFields(data),
+        images:
+          imageUrls.length > 0 ? imageUrls.map((imageUrl) => ({ url: imageUrl })) : defaults.images,
+      })
+    );
+    this.expandedIndex.set(this.embedsArray.length - 1);
+  }
+
+  // The backend merges the item images into one collage; the raw URLs are only
+  // used when it could not build one.
+  private listImageUrls(data: AssetStoreListData | null | undefined): string[] {
+    return data?.collageUrl
+      ? [data.collageUrl]
+      : (data?.imageUrls ?? []).filter((imageUrl) => Boolean(imageUrl)).slice(0, LIST_IMAGE_COUNT);
+  }
+
+  private buildListFields(data: AssetStoreListData): EmbedField[] {
+    const fields: EmbedField[] = [];
+    if (data.author) {
+      fields.push({ name: LIST_AUTHOR_FIELD, value: data.author, inline: true });
+    }
+    if (data.itemCount) {
+      fields.push({ name: LIST_COUNT_FIELD, value: String(data.itemCount), inline: true });
+    }
+    return fields;
   }
 
   private snapshot(): ComposerSnapshot {
@@ -422,13 +471,7 @@ export class EmbedComposerService {
   // so a list's metadata goes in fields instead of the description: two field rows
   // fill that height and close the gap that used to sit above the collage.
   private setListFields(group: EmbedFormGroup, data: AssetStoreListData): void {
-    const fields: EmbedField[] = [];
-    if (data.author) {
-      fields.push({ name: LIST_AUTHOR_FIELD, value: data.author, inline: true });
-    }
-    if (data.itemCount) {
-      fields.push({ name: LIST_COUNT_FIELD, value: String(data.itemCount), inline: true });
-    }
+    const fields = this.buildListFields(data);
     if (fields.length === 0) {
       return;
     }
