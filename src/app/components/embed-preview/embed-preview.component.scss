@@ -122,18 +122,38 @@ p.embed__title {
   background: rgba(8, 12, 20, 0.6);
 }
 
-/* Galleries: even thumbnails so every image is visible without scrolling. */
+/*
+ * Mirrors the collage the backend uploads (see api/utils/collage.ts): a 1200x800
+ * panel with 16px padding and 12px gutters. Everything is expressed as a ratio of
+ * those constants so the preview keeps the real proportions at any width.
+ */
 .embed__images.multi {
+  box-sizing: border-box;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  aspect-ratio: 3 / 2;
+  max-width: 320px;
+  padding: 1.333%;
+  column-gap: 1%;
+  row-gap: 1.5%;
+  border-radius: 0.3rem;
+  background: #1e1f22;
 }
 
 .embed__images.multi .embed__image {
   width: 100%;
   max-width: none;
-  height: 84px;
+  height: 100%;
   max-height: none;
   justify-self: stretch;
   object-fit: cover;
+  border-radius: 0.25rem;
+  background: none;
+}
+
+/* Exactly three images: the last one spans the bottom row, as the collage does. */
+.embed__images.multi .embed__image:nth-child(3):nth-last-child(1) {
+  grid-column: 1 / -1;
 }
 
 .embed__footer {

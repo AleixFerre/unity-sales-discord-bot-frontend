@@ -61,7 +61,7 @@ type ComposerSnapshot = {
 const TOKEN_STORAGE_KEY = 'unity-sales-bot.token';
 /** Discord shows at most 4 images per embed gallery. */
 export const MAX_EMBED_IMAGES = 4;
-const LIST_IMAGE_COUNT = 3;
+const LIST_IMAGE_COUNT = MAX_EMBED_IMAGES;
 
 /**
  * Page-scoped store for the embed composer: owns the one form instance,
