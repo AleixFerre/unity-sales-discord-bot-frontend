@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
+import { FOOTER_ICON_URL } from '../../constants/store-thumbnails';
 import { EmbedConfig } from '../../models/embed.model';
 import { formatFieldValueHtml, toHexColor } from '../../utils/embed-format';
 
@@ -12,6 +13,7 @@ import { formatFieldValueHtml, toHexColor } from '../../utils/embed-format';
 export class EmbedPreviewComponent {
   readonly embed = input.required<EmbedConfig>();
 
+  protected readonly footerIconUrl = FOOTER_ICON_URL;
   protected readonly accentColor = computed(() => toHexColor(this.embed().color));
   protected readonly imageUrls = computed(() =>
     this.embed()

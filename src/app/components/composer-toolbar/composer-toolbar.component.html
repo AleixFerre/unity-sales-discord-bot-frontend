@@ -7,7 +7,7 @@
 
   <div class="toolbar__row">
     <button type="button" class="ghost scrape" (click)="composer.toggleListPanel()">
-      <img class="scrape__icon" [src]="unityIconUrl" alt="" />
+      <img class="scrape__icon" [src]="unityIconUrl" alt="" referrerpolicy="no-referrer" />
       <span>{{ composer.listPanelOpen() ? 'Hide Unity list' : 'Scrap Unity list' }}</span>
     </button>
     <button
@@ -16,7 +16,7 @@
       (click)="composer.scrapFabFree()"
       [disabled]="composer.isScrapingFabFree()"
     >
-      <img class="scrape__icon" [src]="fabIconUrl" alt="" />
+      <img class="scrape__icon" [src]="fabIconUrl" alt="" referrerpolicy="no-referrer" />
       <span>{{ composer.isScrapingFabFree() ? 'Scraping Fab Free...' : 'Scrap Fab Free' }}</span>
     </button>
   </div>

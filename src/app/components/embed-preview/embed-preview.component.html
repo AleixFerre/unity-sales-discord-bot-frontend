@@ -35,20 +35,26 @@
       </div>
 
       @if (embed().thumbnail.url) {
-        <img class="embed__thumbnail" [src]="embed().thumbnail.url" alt="Thumbnail" />
+        <img
+          class="embed__thumbnail"
+          [src]="embed().thumbnail.url"
+          alt="Thumbnail"
+          referrerpolicy="no-referrer"
+        />
       }
     </div>
 
     @if (imageUrls().length) {
       <div class="embed__images" [class.multi]="imageUrls().length > 1">
         @for (url of imageUrls(); track $index) {
-          <img class="embed__image" [src]="url" alt="Embed image" />
+          <img class="embed__image" [src]="url" alt="Embed image" referrerpolicy="no-referrer" />
         }
       </div>
     }
 
     @if (embed().footer.text) {
       <footer class="embed__footer">
+        <img class="embed__footer-icon" [src]="footerIconUrl" alt="" referrerpolicy="no-referrer" />
         <span>{{ embed().footer.text }}</span>
       </footer>
     }

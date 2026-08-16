@@ -151,9 +151,19 @@ p.embed__title {
 }
 
 .embed__footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--mono-font);
   font-size: 0.7rem;
   color: var(--muted);
+}
+
+.embed__footer-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 @media (max-width: 900px) {
