@@ -225,7 +225,7 @@ export class EmbedComposerService {
       });
   }
 
-  /** Creates one Unity embed for an Asset Store list page and fetches its title + item images. */
+  /** Creates one Unity embed for an Asset Store list page and fetches its title, author and item images. */
   scrapeUnityList(rawUrl: string): boolean {
     const url = rawUrl.trim();
     if (!url || !this.embedFormService.isUnityListUrl(url)) {
@@ -340,6 +340,9 @@ export class EmbedComposerService {
           }
           if (data.title) {
             group.controls.title.setValue(data.title);
+          }
+          if (data.author) {
+            group.controls.description.setValue(`by ${data.author}`);
           }
           if (imageUrls.length > 0) {
             this.setImages(group, imageUrls);

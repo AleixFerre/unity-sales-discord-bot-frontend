@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 
-import config from '../config.json' assert { type: 'json' };
+import config from '../config.json' with { type: 'json' };
 import { EmbedRequest } from '../models/embed.model';
 
 export type AssetStoreData = {
@@ -14,6 +14,7 @@ export type AssetStoreData = {
 
 export type AssetStoreListData = {
   title?: string;
+  author?: string;
   imageUrls?: string[];
 };
 
