@@ -3,12 +3,12 @@ import { Injectable } from '@angular/core';
 import {
   FAB_ACCENT_COLOR,
   FAB_THUMBNAIL_URL,
+  FOOTER_TEXT,
   UNITY_ACCENT_COLOR,
   UNITY_THUMBNAIL_URL,
 } from '../constants/store-thumbnails';
 import { EmbedConfig, MessageType } from '../models/embed.model';
 
-const DEFAULT_FOOTER_TEXT = 'GameDev Sales Bot © ' + new Date().getFullYear();
 const DEFAULT_FIELDS = [
   { name: 'Preu', value: '', inline: true },
   { name: 'Fi', value: '', inline: true },
@@ -25,7 +25,7 @@ export class EmbedFormService {
       color: 0,
       url: '',
       fields: DEFAULT_FIELDS.map((field) => ({ ...field })),
-      footer: { text: DEFAULT_FOOTER_TEXT },
+      footer: { text: FOOTER_TEXT },
       thumbnail: { url: '' },
       images: [{ url: '' }],
     };

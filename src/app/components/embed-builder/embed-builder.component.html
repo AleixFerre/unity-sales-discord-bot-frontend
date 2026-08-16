@@ -146,25 +146,4 @@
       </small>
     }
   </section>
-
-  <section class="panel">
-    <h2>Footer</h2>
-    <label
-      class="field"
-      formGroupName="footer"
-      [class.error]="
-        embedForm().controls.footer.controls.text.touched &&
-        embedForm().controls.footer.controls.text.invalid
-      "
-    >
-      <span>Footer text</span>
-      <input type="text" formControlName="text" placeholder="Unity Sales Bot" />
-      @if (
-        embedForm().controls.footer.controls.text.touched &&
-        embedForm().controls.footer.controls.text.invalid
-      ) {
-        <small class="error-text">Footer text is required.</small>
-      }
-    </label>
-  </section>
 </div>

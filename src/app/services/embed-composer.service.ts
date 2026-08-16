@@ -390,10 +390,10 @@ export class EmbedComposerService {
       url: new FormControl(config.url, { nonNullable: true, validators: urlValidators }),
       fields: new FormArray(config.fields.map((field) => this.buildFieldGroup(field))),
       footer: new FormGroup({
-        text: new FormControl(config.footer.text, {
-          nonNullable: true,
-          validators: isCustom ? [] : [Validators.required],
-        }),
+        text: new FormControl(
+          { value: config.footer.text, disabled: true },
+          { nonNullable: true }
+        ),
       }),
       thumbnail: this.buildMediaGroup(config.thumbnail.url),
       images: new FormArray(config.images.map((image) => this.buildMediaGroup(image.url))),
