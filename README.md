@@ -1,6 +1,7 @@
 # Unity Sales Embed Builder (Frontend)
+
 _Important: this UI requires the backend repo to send embeds. Grab both repos._
-_Backend repo: https://github.com/AleixFerre/unity-sales-discord-bot_
+_Backend repo: <https://github.com/AleixFerre/unity-sales-discord-bot>_
 
 Dark-themed Angular UI for composing Discord embeds and sending them to the backend API.
 
@@ -53,6 +54,7 @@ For GitHub Pages (configured in `package.json`):
 ```bash
 npm run deploy
 ```
+
 Then update `src/app/config.json`, rebuild, and deploy again if the backend URL changes.
 
 ## Usage
@@ -63,5 +65,5 @@ Then update `src/app/config.json`, rebuild, and deploy again if the backend URL 
 
 ## Related repos
 
-- https://github.com/AleixFerre/unity-sales-discord-bot
-- https://github.com/AleixFerre/unity-sales-discord-bot-frontend
+- <https://github.com/AleixFerre/unity-sales-discord-bot>
+- <https://github.com/AleixFerre/unity-sales-discord-bot-frontend>
