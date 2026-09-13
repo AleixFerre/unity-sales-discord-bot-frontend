@@ -8,13 +8,13 @@ Dark-themed Angular UI for composing Discord embeds and sending them to the back
 ## Requirements
 
 - Node.js 18+
-- npm or Bun
+- Bun
 
 ## Install
 
 ```bash
 cd unity-sales-frontend
-npm install
+bun install
 ```
 
 ## Configure the backend URL
@@ -32,7 +32,7 @@ This app reads the backend base URL from `src/app/config.json` and sends request
 ## Run locally
 
 ```bash
-npm start
+bun start
 ```
 
 Open `http://localhost:4200`.
@@ -40,7 +40,7 @@ Open `http://localhost:4200`.
 ## Build
 
 ```bash
-npm run build
+bun run build
 ```
 
 The output is in `dist/unity-sales-frontend/`.
@@ -52,7 +52,7 @@ This is a static site. Upload the contents of `dist/unity-sales-frontend/` to an
 For GitHub Pages (configured in `package.json`):
 
 ```bash
-npm run deploy
+bun run deploy
 ```
 
 Then update `src/app/config.json`, rebuild, and deploy again if the backend URL changes.
